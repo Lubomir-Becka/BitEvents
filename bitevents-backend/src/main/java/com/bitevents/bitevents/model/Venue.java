@@ -30,8 +30,6 @@ public class Venue {
     @Column(name = "city", nullable = false, length = 100)
     private String city;
 
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic = true;
 
     @Column(name = "latitude", precision = 10, scale = 8)
     private BigDecimal latitude;
