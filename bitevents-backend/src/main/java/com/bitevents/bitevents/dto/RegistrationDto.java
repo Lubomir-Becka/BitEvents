@@ -7,7 +7,7 @@ import lombok.Value;
 
 
 @Value
-public class RegistrationRequest {
+public class RegistrationDto {
 
     @NotBlank(message = "Meno je povinné")
     String name;

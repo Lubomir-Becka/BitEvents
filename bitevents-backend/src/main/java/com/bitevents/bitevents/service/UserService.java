@@ -1,6 +1,6 @@
 package com.bitevents.bitevents.service;
 
-import com.bitevents.bitevents.dto.RegistrationRequest;
+import com.bitevents.bitevents.dto.RegistrationDto;
 import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,7 +18,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerNewUser(RegistrationRequest request) {
+    public User registerNewUser(RegistrationDto request) {
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Používateľ s týmto e-mailom už existuje.");

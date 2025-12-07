@@ -1,6 +1,6 @@
 package com.bitevents.bitevents.controller;
 
-import com.bitevents.bitevents.dto.RegistrationRequest;
+import com.bitevents.bitevents.dto.RegistrationDto;
 import com.bitevents.bitevents.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationRequest request) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationDto request) {
         try {
             userService.registerNewUser(request);
             return new ResponseEntity<>("Používateľ úspešne zaregistrovaný.", HttpStatus.CREATED);
