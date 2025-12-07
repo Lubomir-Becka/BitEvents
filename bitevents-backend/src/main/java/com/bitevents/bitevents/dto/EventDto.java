@@ -38,5 +38,4 @@ public class EventDto {
 
     private String imageUrl;
 
-    // Status nie je v DTO, lebo sa nastavuje buď automaticky alebo serverom
 }
