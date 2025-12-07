@@ -1,11 +1,19 @@
 package com.bitevents.bitevents.model;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "events")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Event {
 
     @Id
@@ -30,7 +38,7 @@ public class Event {
     private String type;
 
     @Column(name = "creation_date_time", nullable = false)
-    private OffsetDateTime creationDateTime;
+    private OffsetDateTime creationDateTime = OffsetDateTime.now();
 
     @Column(name = "start_date_time", nullable = false)
     private OffsetDateTime startDateTime;

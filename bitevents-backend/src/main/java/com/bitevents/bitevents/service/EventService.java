@@ -2,26 +2,61 @@ package com.bitevents.bitevents.service;
 
 import com.bitevents.bitevents.dto.EventDto;
 import com.bitevents.bitevents.model.Event;
+import com.bitevents.bitevents.model.User;
+import com.bitevents.bitevents.model.Venue;
 import com.bitevents.bitevents.repository.EventRepository;
-import org.springframework.stereotype.Service;
+import com.bitevents.bitevents.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class EventService {
 
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
+    private final VenueService venueService; // Stále používame Service na nájdenie Venue
 
-    public EventService(EventRepository eventRepository) {
+    public EventService(EventRepository eventRepository, UserRepository userRepository, VenueService venueService) {
         this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
+        this.venueService = venueService;
     }
 
     public Event createEvent(EventDto dto) {
+        validateTimeRange(dto.getStartDateTime(), dto.getEndDateTime());
+
+        User organizer = userRepository.findById(dto.getOrganizerId())
+                .orElseThrow(() -> new EntityNotFoundException("Organizátor s ID " + dto.getOrganizerId() + " nebol nájdený."));
+
+        Venue venue = venueService.findById(dto.getVenueId());
+
+        Event event = getEvent(dto, organizer, venue);
+
+        return eventRepository.save(event);
+    }
+
+    private static Event getEvent(EventDto dto, User organizer, Venue venue) {
         Event event = new Event();
+        event.setOrganizer(organizer);
+        event.setVenue(venue);
+
         event.setName(dto.getName());
         event.setDescription(dto.getDescription());
+        event.setType(dto.getType());
+        event.setCreationDateTime(dto.getCreationDateTime());
         event.setStartDateTime(dto.getStartDateTime());
-        return eventRepository.save(event);
+        event.setEndDateTime(dto.getEndDateTime());
+        event.setCapacity(dto.getCapacity());
+        event.setPrice(dto.getPrice() != null ? dto.getPrice() : BigDecimal.ZERO);
+        event.setImageUrl(dto.getImageUrl());
+        event.setStatus(dto.getStatus() != null ? dto.getStatus() : "Upcoming");
+        return event;
     }
 
     public List<Event> findAllEvents() {
@@ -36,9 +71,31 @@ public class EventService {
     public Event updateEvent(Long id, EventDto dto) {
         Event existingEvent = findById(id);
 
+        validateTimeRange(dto.getStartDateTime(), dto.getEndDateTime());
+
+        if (!existingEvent.getOrganizer().getId().equals(dto.getOrganizerId())) {
+            User newOrganizer = userRepository.findById(dto.getOrganizerId())
+                    .orElseThrow(() -> new EntityNotFoundException("Nový organizátor nebol nájdený."));
+            existingEvent.setOrganizer(newOrganizer);
+        }
+
+        if (!existingEvent.getVenue().getId().equals(dto.getVenueId())) {
+            Venue newVenue = venueService.findById(dto.getVenueId());
+            existingEvent.setVenue(newVenue);
+        }
+
         existingEvent.setName(dto.getName());
         existingEvent.setDescription(dto.getDescription());
+        existingEvent.setType(dto.getType());
         existingEvent.setStartDateTime(dto.getStartDateTime());
+        existingEvent.setEndDateTime(dto.getEndDateTime());
+        existingEvent.setCapacity(dto.getCapacity());
+        existingEvent.setPrice(dto.getPrice() != null ? dto.getPrice() : BigDecimal.ZERO);
+        existingEvent.setImageUrl(dto.getImageUrl());
+
+        if (dto.getStatus() != null) {
+            existingEvent.setStatus(dto.getStatus());
+        }
 
         return eventRepository.save(existingEvent);
     }
@@ -48,5 +105,14 @@ public class EventService {
             throw new EntityNotFoundException("Udalosť s ID " + id + " nebola nájdená.");
         }
         eventRepository.deleteById(id);
+    }
+
+    private void validateTimeRange(OffsetDateTime start, OffsetDateTime end) {
+        if (start == null) {
+            throw new IllegalArgumentException("Dátum začiatku je povinný.");
+        }
+        if (end != null && start.isAfter(end)) {
+            throw new IllegalArgumentException("Dátum konca udalosti nemôže byť pred dátumom začiatku.");
+        }
     }
 }

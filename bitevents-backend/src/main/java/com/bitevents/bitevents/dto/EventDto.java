@@ -26,6 +26,9 @@ public class EventDto {
     @Size(max = 100)
     private String type;
 
+    @NotNull(message = "Dátum vytvorenia je povinný")
+    private OffsetDateTime creationDateTime;
+
     @NotNull(message = "Dátum začiatku je povinný")
     private OffsetDateTime startDateTime;
 
