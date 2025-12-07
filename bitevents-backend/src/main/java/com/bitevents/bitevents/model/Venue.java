@@ -1,12 +1,15 @@
 package com.bitevents.bitevents.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "venues")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Venue {
 
@@ -14,18 +17,31 @@ public class Venue {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "address", nullable = false)
+    @Column(name = "address", columnDefinition = "TEXT", nullable = false)
     private String address;
 
-    @Column(name = "city", nullable = false)
+    @Column(name = "city", nullable = false, length = 100)
     private String city;
 
-    @Column(name = "latitude")
-    private Double latitude;
+    // Default hodnota TRUE
+    @Column(name = "is_public", nullable = false)
+    private Boolean isPublic = true;
 
-    @Column(name = "longitude")
-    private Double longitude;
+    // SQL NUMERIC(10, 8) -> Java BigDecimal
+    @Column(name = "latitude", precision = 10, scale = 8)
+    private BigDecimal latitude;
+
+    // SQL NUMERIC(11, 8) -> Java BigDecimal
+    @Column(name = "longitude", precision = 11, scale = 8)
+    private BigDecimal longitude;
+
+    @Column(name = "google_maps_url", columnDefinition = "TEXT")
+    private String googleMapsUrl;
 }
