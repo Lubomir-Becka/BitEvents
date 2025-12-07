@@ -12,8 +12,9 @@ public class VenueDto {
     @NotBlank(message = "Adresa je povinná")
     private String address;
 
-    @NotNull(message = "Vlastník (Organizátor ID) je povinný")
-    private Long ownerId;
+    @NotBlank(message = "Mesto je povinné")
+    @Size(max = 100, message = "Názov mesta je príliš dlhý")
+    private String city;
 
     @NotNull(message = "Zemepisná šírka je povinná")
     @DecimalMin(value = "-90.0", message = "Latitude musí byť medzi -90 a 90")
@@ -24,4 +25,8 @@ public class VenueDto {
     @DecimalMin(value = "-180.0", message = "Longitude musí byť medzi -180 a 180")
     @DecimalMax(value = "180.0", message = "Longitude musí byť medzi -180 a 180")
     private Double longitude;
+
+    @Size(max = 2048, message = "URL je príliš dlhá")
+    @Pattern(regexp = "^(http|https)://.*$", message = "URL musí začínať http:// alebo https://")
+    private String googleMapsUrl;
 }
