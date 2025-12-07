@@ -25,10 +25,9 @@ public class UserService {
         }
 
         User user = new User();
-        user.setName(request.getName());
-        user.setSurname(request.getSurname());
+        user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-        user.setRegistrationDate(ZonedDateTime.now());
+        user.setRegistrationDate(ZonedDateTime.now().toOffsetDateTime());
 
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
