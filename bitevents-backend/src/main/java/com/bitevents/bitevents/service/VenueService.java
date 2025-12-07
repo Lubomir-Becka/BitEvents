@@ -1,13 +1,18 @@
 package com.bitevents.bitevents.service;
-
 import com.bitevents.bitevents.dto.VenueDto;
+import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.model.Venue;
+import com.bitevents.bitevents.repository.UserRepository;
 import com.bitevents.bitevents.repository.VenueRepository;
-import org.springframework.stereotype.Service;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
+@Transactional
 public class VenueService {
 
     private final VenueRepository venueRepository;
@@ -16,20 +21,19 @@ public class VenueService {
         this.venueRepository = venueRepository;
     }
 
-    public Venue createVenue(VenueDto dto) {
+    public Venue createVenue(VenueDto dto, User owner) {
         Venue venue = new Venue();
+
+        venue.setUser(owner);
 
         venue.setName(dto.getName());
         venue.setAddress(dto.getAddress());
-        venue.setOwnerId(dto.getOwnerId());
-        venue.setLatitude(dto.getLatitude());
-        venue.setLongitude(dto.getLongitude());
+        venue.setCity(dto.getCity());
+        venue.setLatitude(BigDecimal.valueOf(dto.getLatitude()));
+        venue.setLongitude(BigDecimal.valueOf(dto.getLongitude()));
+        venue.setGoogleMapsUrl(dto.getGoogleMapsUrl());
 
         return venueRepository.save(venue);
-    }
-
-    public List<Venue> findAllVenues() {
-        return venueRepository.findAll();
     }
 
     public Venue findById(Long id) {
@@ -37,21 +41,22 @@ public class VenueService {
                 .orElseThrow(() -> new EntityNotFoundException("Miesto konania s ID " + id + " nebolo nájdené."));
     }
 
-    // U: UPDATE
+    public List<Venue> findAllVenuesByUser(User user) {
+        return venueRepository.findAllByUser(user);
+    }
     public Venue updateVenue(Long id, VenueDto dto) {
         Venue existingVenue = findById(id);
 
-        // Aktualizácia polí
         existingVenue.setName(dto.getName());
         existingVenue.setAddress(dto.getAddress());
-        existingVenue.setOwnerId(dto.getOwnerId());
-        existingVenue.setLatitude(dto.getLatitude());
-        existingVenue.setLongitude(dto.getLongitude());
+        existingVenue.setCity(dto.getCity());
+        existingVenue.setLatitude(BigDecimal.valueOf(dto.getLatitude()));
+        existingVenue.setLongitude(BigDecimal.valueOf(dto.getLongitude()));
+        existingVenue.setGoogleMapsUrl(dto.getGoogleMapsUrl());
 
         return venueRepository.save(existingVenue);
     }
 
-    // D: DELETE
     public void deleteVenue(Long id) {
         if (!venueRepository.existsById(id)) {
             throw new EntityNotFoundException("Miesto konania s ID " + id + " nebolo nájdené.");
