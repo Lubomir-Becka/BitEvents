@@ -30,15 +30,13 @@ public class Venue {
     @Column(name = "city", nullable = false, length = 100)
     private String city;
 
-    // Default hodnota TRUE
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic = true;
 
-    // SQL NUMERIC(10, 8) -> Java BigDecimal
     @Column(name = "latitude", precision = 10, scale = 8)
     private BigDecimal latitude;
 
-    // SQL NUMERIC(11, 8) -> Java BigDecimal
+
     @Column(name = "longitude", precision = 11, scale = 8)
     private BigDecimal longitude;
 
