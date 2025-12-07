@@ -4,15 +4,16 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 public class EventDto {
 
     @NotNull(message = "ID organizátora je povinné")
-    private Integer organizerId;
+    private Long organizerId;
 
     @NotNull(message = "ID miesta konania je povinné")
-    private Integer venueId;
+    private Long venueId;
 
     @NotBlank(message = "Názov udalosti je povinný")
     @Size(max = 255, message = "Názov je príliš dlhý")
@@ -26,11 +27,11 @@ public class EventDto {
     private String type;
 
     @NotNull(message = "Dátum začiatku je povinný")
-    private LocalDateTime startDateTime;
+    private OffsetDateTime startDateTime;
 
-    private LocalDateTime endDateTime;
+    private OffsetDateTime endDateTime;
 
-    @PositiveOrZero(message = "Kapacita musí byť nezáporné číslo")
+    @Positive(message = "Kapacita musí byť kladné číslo")
     private Integer capacity;
 
     @DecimalMin(value = "0.00", message = "Cena nesmie byť záporná")
@@ -38,4 +39,6 @@ public class EventDto {
 
     private String imageUrl;
 
+    @Pattern(regexp = "Upcoming|Cancelled|Postponed|Sold Out|Completed", message = "Neplatný stav udalosti")
+    private String status;
 }
