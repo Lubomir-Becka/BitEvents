@@ -23,9 +23,9 @@ public class Venue {
     @Column(name = "city", nullable = false)
     private String city;
 
-    @Column(name = "latitude", precision = 10, scale = 8)
+    @Column(name = "latitude")
     private Double latitude;
 
-    @Column(name = "longitude", precision = 11, scale = 8)
+    @Column(name = "longitude")
     private Double longitude;
 }

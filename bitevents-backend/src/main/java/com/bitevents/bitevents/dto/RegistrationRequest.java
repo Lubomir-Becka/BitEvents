@@ -10,10 +10,10 @@ import lombok.Value;
 public class RegistrationRequest {
 
     @NotBlank(message = "Meno je povinné")
-    String Name;
+    String name;
 
-    @NotBlank(message = "Meno je povinné")
-    String Surname;
+    @NotBlank(message = "Priezvisko je povinné")
+    String surname;
 
     @Email(message = "E-mail nie je v správnom formáte")
     @NotBlank(message = "E-mail je povinný")
