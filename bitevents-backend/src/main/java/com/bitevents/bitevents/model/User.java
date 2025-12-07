@@ -37,5 +37,5 @@ public class User {
     private String profilePicture;
 
     @Column(name = "is_organizer", nullable = false)
-    private Boolean isOrganizer = false;
+    private Boolean isOrganizer;
 }
