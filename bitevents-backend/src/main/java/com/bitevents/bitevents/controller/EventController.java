@@ -3,10 +3,11 @@ package com.bitevents.bitevents.controller;
 import com.bitevents.bitevents.dto.EventDto;
 import com.bitevents.bitevents.model.Event;
 import com.bitevents.bitevents.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+
 import java.util.List;
 
 @RestController
@@ -20,17 +21,16 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<Event> createEvent(@Valid @RequestBody EventDto eventDto) {
+    public ResponseEntity<Event> createEvent(@RequestBody @Valid EventDto eventDto) {
         Event newEvent = eventService.createEvent(eventDto);
-        return new ResponseEntity<>(newEvent, HttpStatus.CREATED); // 201 Created
+        return ResponseEntity.status(HttpStatus.CREATED).body(newEvent); // 201 Created
     }
-
 
     @GetMapping
-    public List<Event> getAllEvents() {
-        return eventService.findAllEvents(); // 200 OK
+    public ResponseEntity<List<Event>> getAllEvents() {
+        List<Event> events = eventService.findAllEvents();
+        return ResponseEntity.ok(events); // 200 OK
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<Event> getEventById(@PathVariable Long id) {
@@ -38,9 +38,10 @@ public class EventController {
         return ResponseEntity.ok(event); // 200 OK
     }
 
-
     @PutMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @Valid @RequestBody EventDto eventDto) {
+    public ResponseEntity<Event> updateEvent(
+            @PathVariable Long id,
+            @RequestBody @Valid EventDto eventDto) {
         Event updatedEvent = eventService.updateEvent(id, eventDto);
         return ResponseEntity.ok(updatedEvent); // 200 OK
     }
