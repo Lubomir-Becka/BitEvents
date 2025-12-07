@@ -5,9 +5,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import java.time.ZonedDateTime;
 
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.OffsetDateTime;
+
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class User {
 
@@ -15,11 +21,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "surname", nullable = false)
-    private String surname;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -27,9 +30,12 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "registration_date", nullable = false)
-    private ZonedDateTime registrationDate;
+    @Column(name = "registration_date", nullable = false, updatable = false)
+    private OffsetDateTime registrationDate = OffsetDateTime.now();
 
-    @Column(name = "profile_picture")
-    private String profile_picture;
+    @Column(name = "profile_picture", columnDefinition = "TEXT")
+    private String profilePicture;
+
+    @Column(name = "is_organizer", nullable = false)
+    private Boolean isOrganizer = false;
 }
