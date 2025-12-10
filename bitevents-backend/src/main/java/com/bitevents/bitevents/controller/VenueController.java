@@ -32,7 +32,7 @@ public class VenueController {
             @AuthenticationPrincipal UserDetails userDetails) {
         User owner = userService.findByEmail(userDetails.getUsername());
         Venue newVenue = venueService.createVenue(venueDto, owner);
-        return new ResponseEntity<>(newVenue, HttpStatus.CREATED); // 201 Created
+        return new ResponseEntity<>(newVenue, HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -40,26 +40,41 @@ public class VenueController {
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.findByEmail(userDetails.getUsername());
         List<Venue> venues = venueService.findAllVenuesByUser(user);
-        return ResponseEntity.ok(venues); // 200 OK
+        return ResponseEntity.ok(venues);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Venue> getVenueById(@PathVariable Long id) {
         Venue venue = venueService.findById(id);
-        return ResponseEntity.ok(venue); // 200 OK
+        return ResponseEntity.ok(venue);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Venue> updateVenue(
             @PathVariable Long id,
-            @Valid @RequestBody VenueDto venueDto) {
+            @Valid @RequestBody VenueDto venueDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.findByEmail(userDetails.getUsername());
+        
+        if (!venueService.isVenueOwner(id, currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         Venue updatedVenue = venueService.updateVenue(id, venueDto);
-        return ResponseEntity.ok(updatedVenue); // 200 OK
+        return ResponseEntity.ok(updatedVenue);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteVenue(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteVenue(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User currentUser = userService.findByEmail(userDetails.getUsername());
+        
+        if (!venueService.isVenueOwner(id, currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         venueService.deleteVenue(id);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
 }
