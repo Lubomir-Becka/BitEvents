@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Loader2, Check } from 'lucide-react';
 import { authApi, getErrorMessage } from '../services/api';
 import { useAuth } from '../context/useAuth';
 
@@ -73,7 +73,7 @@ export const Register: React.FC = () => {
     <div className="w-full min-h-screen flex bg-gray-50">
       {/* LEFT COLUMN - FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12">
-        <div className="max-w-md w-full space-y-8">
+        <div className="max-w-md w-full flex flex-col justify-center gap-5">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3">
             <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -101,22 +101,28 @@ export const Register: React.FC = () => {
           )}
 
           {/* Registration Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             {/* Full Name Field */}
             <div>
               <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                 Celé meno
               </label>
-              <input
-                id="fullName"
-                type="text"
-                placeholder="Ján Novák"
-                autoComplete="name"
-                {...register('fullName')}
-                className={`w-full pl-4 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
-                  errors.fullName ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="fullName"
+                  type="text"
+                  placeholder="Ján Novák"
+                  autoComplete="name"
+                  {...register('fullName')}
+                  style={{ paddingLeft: '27px' }}
+                  className={`w-full pl-11 pr-4 py-4 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                    errors.fullName ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                />
+              </div>
               {errors.fullName && (
                 <p className="mt-2 text-sm text-red-600">{errors.fullName.message}</p>
               )}
@@ -127,16 +133,22 @@ export const Register: React.FC = () => {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Emailová adresa
               </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="jan@example.com"
-                autoComplete="username"
-                {...register('email')}
-                className={`w-full pl-4 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="jan@example.com"
+                  autoComplete="username"
+                  {...register('email')}
+                  style={{ paddingLeft: '27px' }}
+                  className={`w-full pl-11 pr-4 py-4 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                />
+              </div>
               {errors.email && (
                 <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
               )}
@@ -148,13 +160,17 @@ export const Register: React.FC = () => {
                 Heslo
               </label>
               <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="new-password"
                   {...register('password')}
-                  className={`w-full pl-4 pr-12 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                  style={{ paddingLeft: '27px' }}
+                  className={`w-full pl-11 pr-12 py-4 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   }`}
                 />
@@ -178,13 +194,17 @@ export const Register: React.FC = () => {
                 Potvrdiť heslo
               </label>
               <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="new-password"
                   {...register('confirmPassword')}
-                  className={`w-full pl-4 pr-12 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                  style={{ paddingLeft: '27px' }}
+                  className={`w-full pl-11 pr-12 py-4 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
                     errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                   }`}
                 />
@@ -203,19 +223,19 @@ export const Register: React.FC = () => {
             </div>
 
             {/* Organizer Checkbox */}
-            <label htmlFor="isOrganizer" className="flex p-3 border rounded-md bg-indigo-50 border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors items-center">
+            <label style={{ paddingLeft: '4px' }} htmlFor="isOrganizer" className="flex items-center p-3 border rounded-md bg-indigo-50 border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors gap-2">
               <input
                 id="isOrganizer"
                 type="checkbox"
                 {...register('isOrganizer')}
-                className="h-4 w-4 mt-0.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded gap-2"
+                className="h-4 w-4 mt-0.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               />
               <div className="ml-3">
-                <span className="block text-sm font-medium text-gray-900 gap-2">
+                <span className="block text-sm font-medium text-gray-900">
                   Som organizátor IT eventov
                 </span>
-                <span className="block text-xs text-gray-500 mt-1 gap-2">
-                  Budú ti dostupné nástroje na spravovanie tvojich akcií
+                <span className="block text-xs text-gray-500 mt-1">
+                  Budú ti spr9nástroje na spravovanie tvojich akcií
                 </span>
               </div>
             </label>
@@ -224,7 +244,7 @@ export const Register: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-indigo-600! hover:bg-indigo-700! text-white! font-bold py-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -240,7 +260,7 @@ export const Register: React.FC = () => {
             </button>
 
             {/* Terms */}
-            <p className="text-xs text-gray-500 text-center mt-4">
+            <p className="text-xs text-gray-500 text-center">
               Pokračovaním súhlasíš s našimi{' '}
               <a href="/terms" className="text-indigo-600 hover:underline">
                 podmienkami
