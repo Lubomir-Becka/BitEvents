@@ -61,7 +61,6 @@ class EventServiceTest {
         eventDto.setName("Test Event");
         eventDto.setDescription("Test Description");
         eventDto.setType("Conference");
-        eventDto.setCreationDateTime(OffsetDateTime.now());
         eventDto.setStartDateTime(OffsetDateTime.now().plusDays(1));
         eventDto.setEndDateTime(OffsetDateTime.now().plusDays(2));
         eventDto.setCapacity(100);
