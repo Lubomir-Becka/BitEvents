@@ -3,7 +3,6 @@ package com.bitevents.bitevents.dto;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Data
@@ -25,9 +24,6 @@ public class EventDto {
     @NotBlank(message = "Typ udalosti je povinný")
     @Size(max = 100)
     private String type;
-
-    @NotNull(message = "Dátum vytvorenia je povinný")
-    private OffsetDateTime creationDateTime;
 
     @NotNull(message = "Dátum začiatku je povinný")
     private OffsetDateTime startDateTime;
