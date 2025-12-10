@@ -15,14 +15,14 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:mySecretKeyForJwtTokenGenerationThatIsLongEnoughAtLeast32Bytes}")
+    @Value("${jwt.secret:}")
     private String jwtSecret;
 
     @Value("${jwt.expiration:86400000}")
     private long jwtExpirationMs;
 
     public String generateToken(String email) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = getSigningKey();
 
         return Jwts.builder()
                 .setSubject(email)
@@ -33,7 +33,7 @@ public class JwtTokenProvider {
     }
 
     public String getEmailFromToken(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = getSigningKey();
 
         return Jwts.parser()
                 .setSigningKey(key)
@@ -45,7 +45,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            SecretKey key = getSigningKey();
 
             Jwts.parser()
                     .setSigningKey(key)
@@ -58,8 +58,22 @@ public class JwtTokenProvider {
         } catch (ExpiredJwtException ex) {
             // token expired
             return false;
+        } catch (IllegalStateException ex) {
+            // secret not configured
+            return false;
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    private SecretKey getSigningKey() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException("JWT secret is not configured. Set JWT_SECRET environment variable.");
+        }
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes long");
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
