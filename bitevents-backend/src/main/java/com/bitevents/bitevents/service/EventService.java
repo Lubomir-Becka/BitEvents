@@ -37,6 +37,7 @@ public class EventService {
         Venue venue = venueService.findById(dto.getVenueId());
 
         Event event = getEvent(dto, organizer, venue);
+        event.setCreationDateTime(OffsetDateTime.now());
 
         return eventRepository.save(event);
     }
@@ -49,7 +50,6 @@ public class EventService {
         event.setName(dto.getName());
         event.setDescription(dto.getDescription());
         event.setType(dto.getType());
-        event.setCreationDateTime(dto.getCreationDateTime());
         event.setStartDateTime(dto.getStartDateTime());
         event.setEndDateTime(dto.getEndDateTime());
         event.setCapacity(dto.getCapacity());
@@ -105,6 +105,11 @@ public class EventService {
             throw new EntityNotFoundException("Udalosť s ID " + id + " nebola nájdená.");
         }
         eventRepository.deleteById(id);
+    }
+
+    public boolean isEventOwner(Long eventId, Long userId) {
+        Event event = findById(eventId);
+        return event.getOrganizer().getId().equals(userId);
     }
 
     private void validateTimeRange(OffsetDateTime start, OffsetDateTime end) {
