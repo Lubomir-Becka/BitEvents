@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { authApi, getErrorMessage } from '../services/api';
 import { useAuth } from '../context/useAuth';
 
@@ -54,13 +54,13 @@ export const Login: React.FC = () => {
     <div className="w-full min-h-screen flex bg-gray-50">
       {/* LEFT COLUMN - FORM */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12">
-        <div className="max-w-md w-full space-y-8">
+        <div className="max-w-md w-full flex flex-col justify-center gap-5">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3">
             <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md">
               <span className="text-white font-bold text-base">{'</>'}</span>
             </div>
-            <span className="text-2xl font-bold text-gray-900">BltEvents</span>
+            <span className="text-2xl font-bold text-gray-900">BitEvents</span>
           </div>
 
           {/* Title & Subtitle */}
@@ -82,40 +82,50 @@ export const Login: React.FC = () => {
           )}
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Emailová adresa
               </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="jan@example.com"
-                autoComplete="username"
-                {...register('email')}
-                className={`w-full pl-4 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                }`}
-              />
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="jan@example.com"
+                  autoComplete="username"
+                  {...register('email')}
+                  style={{ paddingLeft: '27px' }}
+                  className={` w-full pl-11 pr-4 py-4 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                />
+              </div>
               {errors.email && (
                 <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
               )}
             </div>
 
             {/* Password Field */}
-            <div className="mt-4">
+            <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Heslo
               </label>
               <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   {...register('password')}
-                  className={`w-full pl-4 pr-12 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                  style={{ paddingLeft: '27px' }}
+                  className={`w-full pl-11 pr-12 py-4 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   }`}
                 />
@@ -154,7 +164,7 @@ export const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-indigo-600! hover:bg-indigo-700! text-white! font-bold py-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
