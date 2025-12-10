@@ -8,6 +8,8 @@ import com.bitevents.bitevents.dto.UserResponseDto;
 import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,8 @@ import java.time.OffsetDateTime;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -27,7 +31,9 @@ public class AuthService {
     }
 
     public AuthResponseDto register(RegistrationDto request) {
+        log.info("Registration attempt for email={}", request.getEmail());
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("Registration failed - email already exists: {}", request.getEmail());
             throw new IllegalArgumentException("Email už existuje.");
         }
 
@@ -40,19 +46,23 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
         String token = jwtTokenProvider.generateToken(savedUser.getEmail());
-        
+        log.info("User registered: id={}, email={}", savedUser.getId(), savedUser.getEmail());
+
         return new AuthResponseDto(token, mapToUserResponseDto(savedUser));
     }
 
     public AuthResponseDto login(LoginDto request) {
+        log.info("Login attempt for email={}", request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("Nesprávne meno alebo heslo."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            log.warn("Failed login for email={}", request.getEmail());
             throw new IllegalArgumentException("Nesprávne meno alebo heslo.");
         }
 
         String token = jwtTokenProvider.generateToken(user.getEmail());
+        log.info("User logged in: id={}, email={}", user.getId(), user.getEmail());
         return new AuthResponseDto(token, mapToUserResponseDto(user));
     }
 
