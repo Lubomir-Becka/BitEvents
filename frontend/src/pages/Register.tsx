@@ -1,207 +1,261 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '../services/api';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
+import { authApi, getErrorMessage } from '../services/api';
 import { useAuth } from '../context/useAuth';
+
+// Zod schema pre validáciu registrácie
+const registerSchema = z
+  .object({
+    fullName: z.string().refine((val) => val.length >= 2, {
+      message: 'Meno musí mať aspoň 2 znaky.',
+    }),
+    email: z.string().refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Zadajte platný email.',
+    }),
+    password: z.string().refine((val) => val.length >= 8, {
+      message: 'Heslo musí mať aspoň 8 znakov.',
+    }),
+    confirmPassword: z.string(),
+    isOrganizer: z.boolean(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Heslá sa nezhodujú.',
+    path: ['confirmPassword'],
+  });
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isOrganizer, setIsOrganizer] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      fullName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      isOrganizer: false,
+    },
+  });
 
-    if (password !== confirmPassword) {
-      setError('Heslá sa nezhodujú');
-      return;
-    }
-
-    setLoading(true);
+  const onSubmit = async (data: RegisterFormData) => {
+    setApiError('');
 
     try {
       const response = await authApi.register({
-        fullName,
-        email,
-        password,
-        isOrganizer,
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+        isOrganizer: data.isOrganizer,
       });
       const { token, user } = response.data;
       login(user, token);
       navigate('/');
     } catch (err) {
-      const error = err as { response?: { data?: { message: string } } };
-      setError(error.response?.data?.message || 'Registrácia zlyhala');
-    } finally {
-      setLoading(false);
+      setApiError(getErrorMessage(err));
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center px-4 py-8">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 opacity-5 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600 opacity-5 rounded-full blur-3xl"></div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="backdrop-blur-xl bg-white/10 border border-blue-400/20 rounded-2xl shadow-2xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-block mb-4">
-              <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
-                ▶ BitEvents
-              </div>
+    <div className="w-full min-h-screen flex bg-gray-50">
+      {/* LEFT COLUMN - FORM */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12">
+        <div className="max-w-md w-full space-y-8">
+          {/* Logo */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-base">{'</>'}</span>
             </div>
-            <p className="text-blue-100 text-lg font-light">Vytvor si svoj IT komunitný účet</p>
+            <span className="text-2xl font-bold text-gray-900">BltEvents</span>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-400/50 text-red-100 rounded-xl text-sm font-medium backdrop-blur-sm">
-              ✕ {error}
+          {/* Title & Subtitle */}
+          <div className="text-center">
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Vytvor si účet</h1>
+            <p className="text-sm text-gray-600">
+              Už máš účet?{' '}
+              <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
+                Prihlásiť sa
+              </a>
+            </p>
+          </div>
+
+          {/* API Error Alert */}
+          {apiError && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-4">
+              <p className="text-sm text-red-600">{apiError}</p>
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name Input */}
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+            {/* Full Name Field */}
             <div>
-              <label className="block text-blue-100 text-sm font-semibold mb-2">
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                 Celé meno
               </label>
               <input
+                id="fullName"
                 type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
                 placeholder="Ján Novák"
-                className="w-full px-4 py-3 bg-blue-950/40 border border-blue-400/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition backdrop-blur-sm"
-                required
+                autoComplete="name"
+                {...register('fullName')}
+                className={`w-full pl-4 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                  errors.fullName ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
+              {errors.fullName && (
+                <p className="mt-2 text-sm text-red-600">{errors.fullName.message}</p>
+              )}
             </div>
 
-            {/* Email Input */}
+            {/* Email Field */}
             <div>
-              <label className="block text-blue-100 text-sm font-semibold mb-2">
-                E-mailová adresa
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Emailová adresa
               </label>
               <input
+                id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="jan@example.com"
-                className="w-full px-4 py-3 bg-blue-950/40 border border-blue-400/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition backdrop-blur-sm"
-                required
+                autoComplete="username"
+                {...register('email')}
+                className={`w-full pl-4 pr-4 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                  errors.email ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
 
-            {/* Password Input */}
+            {/* Password Field */}
             <div>
-              <label className="block text-blue-100 text-sm font-semibold mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Heslo
               </label>
               <div className="relative">
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Vyber si silné heslo"
-                  className="w-full px-4 py-3 bg-blue-950/40 border border-blue-400/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition backdrop-blur-sm"
-                  required
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  {...register('password')}
+                  className={`w-full pl-4 pr-12 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300/70 hover:text-blue-200 transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={showPassword ? 'Skryť heslo' : 'Zobraziť heslo'}
                 >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-600">{errors.password.message}</p>
+              )}
             </div>
 
-            {/* Confirm Password Input */}
+            {/* Confirm Password Field */}
             <div>
-              <label className="block text-blue-100 text-sm font-semibold mb-2">
-                Potvrď heslo
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Potvrdiť heslo
               </label>
               <div className="relative">
                 <input
+                  id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Zopakuj heslo"
-                  className="w-full px-4 py-3 bg-blue-950/40 border border-blue-400/30 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition backdrop-blur-sm"
-                  required
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  {...register('confirmPassword')}
+                  className={`w-full pl-4 pr-12 py-3 border rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 ${
+                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300/70 hover:text-blue-200 transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={showConfirmPassword ? 'Skryť heslo' : 'Zobraziť heslo'}
                 >
-                  {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {errors.confirmPassword && (
+                <p className="mt-2 text-sm text-red-600">{errors.confirmPassword.message}</p>
+              )}
             </div>
 
             {/* Organizer Checkbox */}
-            <div className="bg-blue-600/20 p-4 rounded-xl border border-blue-400/30 backdrop-blur-sm">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isOrganizer}
-                  onChange={(e) => setIsOrganizer(e.target.checked)}
-                  className="w-5 h-5 bg-blue-950/40 border border-blue-400/50 rounded-lg focus:ring-2 focus:ring-blue-400 cursor-pointer accent-blue-400"
-                />
-                <span className="ml-3 text-blue-50 font-medium">
+            <label htmlFor="isOrganizer" className="flex p-3 border rounded-md bg-indigo-50 border-indigo-100 cursor-pointer hover:bg-indigo-100 transition-colors items-center">
+              <input
+                id="isOrganizer"
+                type="checkbox"
+                {...register('isOrganizer')}
+                className="h-4 w-4 mt-0.5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded gap-2"
+              />
+              <div className="ml-3">
+                <span className="block text-sm font-medium text-gray-900 gap-2">
                   Som organizátor IT eventov
                 </span>
-              </label>
-              <p className="text-xs text-blue-200/70 ml-8 mt-2">
-                Budú ti dostupné nástroje na spravovanie tvojich akcií
-              </p>
-            </div>
+                <span className="block text-xs text-gray-500 mt-1 gap-2">
+                  Budú ti dostupné nástroje na spravovanie tvojich akcií
+                </span>
+              </div>
+            </label>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full mt-6 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white py-3 rounded-xl font-semibold transition disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-base shadow-lg hover:shadow-blue-500/50 disabled:shadow-none"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? '⏳ Zaregistruje sa...' : '✓ Vytvoriť účet'}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Registrujem...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-5 h-5" />
+                  <span>Vytvoriť účet</span>
+                </>
+              )}
             </button>
+
+            {/* Terms */}
+            <p className="text-xs text-gray-500 text-center mt-4">
+              Pokračovaním súhlasíš s našimi{' '}
+              <a href="/terms" className="text-indigo-600 hover:underline">
+                podmienkami
+              </a>
+              {' '}a{' '}
+              <a href="/privacy" className="text-indigo-600 hover:underline">
+                ochranou údajov
+              </a>
+            </p>
           </form>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-blue-400/20"></div>
-            <span className="px-3 text-blue-300/70 text-sm">alebo</span>
-            <div className="flex-1 border-t border-blue-400/20"></div>
-          </div>
-
-          {/* Login Link */}
-          <div className="text-center">
-            <p className="text-blue-200/70 mb-3">Máš už účet?</p>
-            <a
-              href="/login"
-              className="inline-block w-full bg-blue-400/20 hover:bg-blue-400/30 text-blue-100 border border-blue-400/30 py-3 rounded-xl font-semibold transition text-center backdrop-blur-sm"
-            >
-              Prihlásiť sa
-            </a>
-          </div>
-
-          {/* Footer */}
-          <p className="text-xs text-blue-300/50 text-center mt-6">
-            Pokračovaním súhlasíš s našimi podmienkami a ochranou údajov
-          </p>
         </div>
       </div>
+
+      {/* RIGHT COLUMN - EMPTY GRADIENT */}
+      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-gray-800 to-gray-900"></div>
     </div>
   );
 };
