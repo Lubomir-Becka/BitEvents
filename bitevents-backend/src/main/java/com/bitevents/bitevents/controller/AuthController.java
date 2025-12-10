@@ -1,8 +1,8 @@
 package com.bitevents.bitevents.controller;
 
+import com.bitevents.bitevents.dto.AuthResponseDto;
 import com.bitevents.bitevents.dto.LoginDto;
 import com.bitevents.bitevents.dto.RegistrationDto;
-import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +19,15 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody @Valid RegistrationDto request) {
+    public ResponseEntity<AuthResponseDto> register(@RequestBody @Valid RegistrationDto request) {
 
-        User registeredUser = authService.register(request);
-        return ResponseEntity.ok(registeredUser);
+        AuthResponseDto response = authService.register(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody @Valid LoginDto request) {
-        User loggedUser = authService.login(request);
-        return ResponseEntity.ok(loggedUser);
+    public ResponseEntity<AuthResponseDto> login(@RequestBody @Valid LoginDto request) {
+        AuthResponseDto response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 }
