@@ -1,5 +1,7 @@
 package com.bitevents.bitevents.service;
 
+import com.bitevents.bitevents.config.JwtTokenProvider;
+import com.bitevents.bitevents.dto.AuthResponseDto;
 import com.bitevents.bitevents.dto.LoginDto;
 import com.bitevents.bitevents.dto.RegistrationDto;
 import com.bitevents.bitevents.model.User;
@@ -28,6 +30,9 @@ class AuthServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+    
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
 
     @InjectMocks
     private AuthService authService;
@@ -62,14 +67,17 @@ class AuthServiceTest {
         when(userRepository.findByEmail(registrationDto.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registrationDto.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(user);
+        when(jwtTokenProvider.generateToken(user.getEmail())).thenReturn("testToken");
 
         // Act
-        User result = authService.register(registrationDto);
+        AuthResponseDto result = authService.register(registrationDto);
 
         // Assert
         assertNotNull(result);
-        assertEquals("Test User", result.getFullName());
-        assertEquals("test@example.com", result.getEmail());
+        assertNotNull(result.getUser());
+        assertEquals("Test User", result.getUser().getFullName());
+        assertEquals("test@example.com", result.getUser().getEmail());
+        assertEquals("testToken", result.getToken());
         verify(userRepository).findByEmail(registrationDto.getEmail());
         verify(passwordEncoder).encode(registrationDto.getPassword());
         verify(userRepository).save(any(User.class));
@@ -89,17 +97,20 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_ShouldReturnUser_WhenCredentialsAreCorrect() {
+    void login_ShouldReturnAuthResponse_WhenCredentialsAreCorrect() {
         // Arrange
         when(userRepository.findByEmail(loginDto.getEmail())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(loginDto.getPassword(), user.getPasswordHash())).thenReturn(true);
+        when(jwtTokenProvider.generateToken(user.getEmail())).thenReturn("testToken");
 
         // Act
-        User result = authService.login(loginDto);
+        AuthResponseDto result = authService.login(loginDto);
 
         // Assert
         assertNotNull(result);
-        assertEquals(user.getEmail(), result.getEmail());
+        assertNotNull(result.getUser());
+        assertEquals(user.getEmail(), result.getUser().getEmail());
+        assertEquals("testToken", result.getToken());
         verify(userRepository).findByEmail(loginDto.getEmail());
         verify(passwordEncoder).matches(loginDto.getPassword(), user.getPasswordHash());
     }
