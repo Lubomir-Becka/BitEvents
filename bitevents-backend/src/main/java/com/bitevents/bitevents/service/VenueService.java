@@ -2,7 +2,6 @@ package com.bitevents.bitevents.service;
 import com.bitevents.bitevents.dto.VenueDto;
 import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.model.Venue;
-import com.bitevents.bitevents.repository.UserRepository;
 import com.bitevents.bitevents.repository.VenueRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -44,6 +43,7 @@ public class VenueService {
     public List<Venue> findAllVenuesByUser(User user) {
         return venueRepository.findAllByUser(user);
     }
+    
     public Venue updateVenue(Long id, VenueDto dto) {
         Venue existingVenue = findById(id);
 
@@ -62,5 +62,10 @@ public class VenueService {
             throw new EntityNotFoundException("Miesto konania s ID " + id + " nebolo nájdené.");
         }
         venueRepository.deleteById(id);
+    }
+    
+    public boolean isVenueOwner(Long venueId, Long userId) {
+        Venue venue = findById(venueId);
+        return venue.getUser() != null && venue.getUser().getId().equals(userId);
     }
 }
