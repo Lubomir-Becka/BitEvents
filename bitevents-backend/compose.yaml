@@ -1,0 +1,32 @@
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bitevents_db_container
+    restart: always
+    environment:
+        POSTGRES_DB: ${DB_NAME}
+        POSTGRES_USER: ${DB_ADMIN_USER}
+        POSTGRES_PASSWORD: ${DB_ROOT_PASSWORD}
+    volumes:
+
+      - ./pg_data:/var/lib/postgresql/data
+        ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+
+
+  backend:
+    build:
+      context: .
+    container_name: bitevents_backend_container
+    ports:
+      - "8080:8080"
+    environment:
+
+        DB_USER: ${APP_DB_USER}
+        DB_PASSWORD: ${APP_DB_PASSWORD}
+        DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
+    depends_on:
+      - db
