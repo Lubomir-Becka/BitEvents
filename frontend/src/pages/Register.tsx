@@ -275,7 +275,7 @@ export const Register: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN - EMPTY GRADIENT */}
-      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-gray-800 to-gray-900"></div>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-800 to-gray-900"></div>
     </div>
   );
 };
