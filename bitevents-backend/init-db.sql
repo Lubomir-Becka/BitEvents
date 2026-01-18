@@ -97,6 +97,39 @@ CREATE INDEX IF NOT EXISTS event_registrations_event_idx ON event_registrations 
 CREATE INDEX IF NOT EXISTS event_registrations_user_idx ON event_registrations (user_id);
 CREATE INDEX IF NOT EXISTS event_registrations_status_idx ON event_registrations (status);
 
+-- Event images table (multiple images per event)
+CREATE TABLE IF NOT EXISTS event_images (
+    id BIGSERIAL PRIMARY KEY,
+    event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    image_url TEXT NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT false,
+    display_order INTEGER,
+    CONSTRAINT event_images_one_primary_per_event UNIQUE (event_id, is_primary) WHERE is_primary = true
+);
+
+CREATE INDEX IF NOT EXISTS event_images_event_idx ON event_images (event_id);
+CREATE INDEX IF NOT EXISTS event_images_primary_idx ON event_images (event_id, is_primary) WHERE is_primary = true;
+
+-- Saved events table (user favorites)
+CREATE TABLE IF NOT EXISTS saved_events (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    saved_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    CONSTRAINT saved_events_unique UNIQUE (user_id, event_id)
+);
+
+CREATE INDEX IF NOT EXISTS saved_events_user_idx ON saved_events (user_id);
+CREATE INDEX IF NOT EXISTS saved_events_event_idx ON saved_events (event_id);
+
+-- Grant explicit permissions on saved_events table
+GRANT SELECT, INSERT, UPDATE, DELETE ON saved_events TO bitevents_app;
+GRANT USAGE, SELECT ON SEQUENCE saved_events_id_seq TO bitevents_app;
+
+-- Grant explicit permissions on event_images table
+GRANT SELECT, INSERT, UPDATE, DELETE ON event_images TO bitevents_app;
+GRANT USAGE, SELECT ON SEQUENCE event_images_id_seq TO bitevents_app;
+
 -- Grant explicit permissions on event_registrations table
 GRANT SELECT, INSERT, UPDATE, DELETE ON event_registrations TO bitevents_app;
 GRANT USAGE, SELECT ON SEQUENCE event_registrations_id_seq TO bitevents_app;
