@@ -44,6 +44,10 @@ public class VenueService {
         return venueRepository.findAllByUser(user);
     }
     
+    public List<Venue> findAllVenues() {
+        return venueRepository.findAll();
+    }
+
     public Venue updateVenue(Long id, VenueDto dto) {
         Venue existingVenue = findById(id);
 

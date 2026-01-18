@@ -7,6 +7,8 @@ import com.bitevents.bitevents.model.Venue;
 import com.bitevents.bitevents.repository.EventRepository;
 import com.bitevents.bitevents.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,6 +63,10 @@ public class EventService {
 
     public List<Event> findAllEvents() {
         return eventRepository.findAll();
+    }
+
+    public Page<Event> findAllEvents(String search, List<String> cities, String type, Pageable pageable) {
+        return eventRepository.findByFilters(search, cities, type, pageable);
     }
 
     public Event findById(Long id) {
