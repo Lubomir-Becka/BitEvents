@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
 import { Navigation } from '../components/Navigation';
 import { SearchBar } from '../components/SearchBar';
 import { Sidebar, type LocationFilters } from '../components/Sidebar';
@@ -11,7 +10,6 @@ import { useEvents } from '../hooks/useEvents';
 
 export const Events: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocations, setSelectedLocations] = useState<LocationFilters>({
     bratislava: true,
@@ -62,23 +60,6 @@ export const Events: React.FC = () => {
   const handleEventClick = (event: ApiEvent) => {
     navigate(`/event/${event.id}`);
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-blue-600 to-blue-800 flex items-center justify-center px-4">
-        <div className="text-center text-white max-w-md">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">BitEvents</h1>
-          <p className="text-lg md:text-xl mb-8">Prihlás sa, aby si mohol pokračovať</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition w-full md:w-auto"
-          >
-            Prihlásiť sa
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
