@@ -71,7 +71,6 @@ public class AuthService {
         dto.setId(user.getId());
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
-        dto.setRegistrationDate(user.getRegistrationDate());
         dto.setProfilePicture(user.getProfilePicture());
         dto.setIsOrganizer(user.getIsOrganizer());
         return dto;
