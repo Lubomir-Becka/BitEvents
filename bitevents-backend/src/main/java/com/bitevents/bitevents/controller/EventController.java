@@ -1,11 +1,16 @@
 package com.bitevents.bitevents.controller;
 
 import com.bitevents.bitevents.dto.EventDto;
+import com.bitevents.bitevents.dto.PagedEventsResponseDto;
 import com.bitevents.bitevents.model.Event;
 import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.service.EventService;
 import com.bitevents.bitevents.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,9 +42,27 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents() {
-        List<Event> events = eventService.findAllEvents();
-        return ResponseEntity.ok(events);
+    public ResponseEntity<PagedEventsResponseDto> getAllEvents(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) List<String> city,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int limit) {
+
+        // Spring Data uses 0-based page index
+        // Use database column name for native query
+        Pageable pageable = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.ASC, "start_date_time"));
+        Page<Event> eventPage = eventService.findAllEvents(search, city, category, pageable);
+
+        PagedEventsResponseDto response = new PagedEventsResponseDto(
+                eventPage.getContent(),
+                eventPage.getTotalElements(),
+                page,
+                limit,
+                eventPage.getTotalPages()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
