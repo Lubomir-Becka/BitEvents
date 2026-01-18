@@ -12,7 +12,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, onSearchChang
       <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 text-white">
         Tvoj kompas v slovenskom <span className="text-blue-300">IT svete</span>
       </h1>
-      <p className="text-blue-50 text-base sm:text-lg mb-10 max-w-2xl mx-auto px-4 leading-relaxed">
+      <p className="text-blue-50 text-base text-center sm:text-lg mb-10 max-w-2xl mx-auto px-4 leading-relaxed">
         Objavuj najlepšie konferencie, meetupy a hackatony v Bratislave, Košiciach a online.
         Buduj svoju kariéru a networkuj s ľuďmi v odvetví.
       </p>
