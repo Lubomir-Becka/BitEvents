@@ -27,9 +27,19 @@ export const EventDetail: React.FC = () => {
       try {
         const response = await eventsApi.getById(Number(id));
         setEvent(response.data);
-        // TODO: Načítať zo servera, či je event uložený a či je užívateľ zaregistrovaný
-        setIsSaved(false);
-        setIsRegistered(false);
+        
+        // Check if user is registered for this event
+        if (isAuthenticated) {
+          try {
+            const isReg = await registrationApi.isRegistered(Number(id));
+            setIsRegistered(isReg.data.isRegistered);
+          } catch (err) {
+            console.error('Failed to check registration status:', err);
+            setIsRegistered(false);
+          }
+        } else {
+          setIsRegistered(false);
+        }
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
@@ -38,7 +48,7 @@ export const EventDetail: React.FC = () => {
     };
 
     fetchEvent();
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -69,31 +79,55 @@ export const EventDetail: React.FC = () => {
 
     try {
       await registrationApi.register(Number(id));
-      // Refresh event data to update registration status
-      const response = await eventsApi.getById(Number(id));
-      setEvent(response.data);
+      // Priamo nastav registrovaný stav bez čakania na API
       setIsRegistered(true);
-      alert('Registrácia úspešná!');
     } catch (err) {
       const errorMsg = getErrorMessage(err);
-      alert(`Chyba pri registrácii: ${errorMsg}`);
+      console.error('Chyba pri registrácii:', errorMsg);
     } finally {
       setIsRegistering(false);
     }
   };
 
-  const handleSaveEvent = () => {
+  const handleUnregister = async () => {
+    if (!id) return;
+
+    setIsRegistering(true);
+
+    try {
+      await registrationApi.unregister(Number(id));
+      // Priamo nastav neregistrovaný stav bez čakania na API
+      setIsRegistered(false);
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      console.error('Chyba pri odhlásení:', errorMsg);
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleSaveEvent = async () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: `/event/${id}` } });
       return;
     }
 
+    if (!id) return;
+
     setIsSaving(true);
-    // TODO: Implementovať uloženie cez API
-    setTimeout(() => {
+    try {
+      if (isSaved) {
+        await eventsApi.unsaveEvent(Number(id));
+      } else {
+        await eventsApi.saveEvent(Number(id));
+      }
       setIsSaved(!isSaved);
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      alert(`Chyba pri uložení eventu: ${errorMsg}`);
+    } finally {
       setIsSaving(false);
-    }, 500);
+    }
   };
 
   const openGoogleMaps = () => {
@@ -110,12 +144,12 @@ export const EventDetail: React.FC = () => {
       return (
         <>
           <Loader2 className="w-5 h-5 animate-spin" />
-          <span>Registrujem...</span>
+          <span>{isRegistered ? 'Odhlásujem...' : 'Registrujem...'}</span>
         </>
       );
     }
     if (isRegistered) {
-      return <span>✓ UŽ STE ZAREGISTROVANÝ</span>;
+      return <span>ODHLÁSIŤ SA Z EVENTU</span>;
     }
     return <span>REGISTROVAŤ SA NA EVENT</span>;
   };
@@ -317,11 +351,11 @@ export const EventDetail: React.FC = () => {
                   </div>
 
                   <button
-                    onClick={handleRegister}
-                    disabled={isRegistering || isRegistered}
+                    onClick={isRegistered ? handleUnregister : handleRegister}
+                    disabled={isRegistering}
                     className={`w-full font-bold py-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3 ${
                       isRegistered
-                        ? 'bg-green-600! text-white!'
+                        ? 'bg-red-600! text-white! hover:bg-red-700!'
                         : 'bg-blue-600! text-white! hover:bg-blue-700!'
                     }`}
                   >
@@ -352,40 +386,49 @@ export const EventDetail: React.FC = () => {
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
-                      src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(
-                        `${event.venue.name}, ${event.venue.city}`
-                      )}`}
+                      src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
+                        event.venue.address
+                          ? `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`
+                          : `${event.venue.name}, ${event.venue.city}`
+                      )}&zoom=15`}
                       allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
                     />
-                    {/* Fallback - statická mapa */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-blue-100 to-blue-200">
-                      <div className="text-center">
-                        <MapPin className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-                        <p className="text-sm text-gray-700 font-medium">{event.venue.name}</p>
-                        <p className="text-xs text-gray-600">{event.venue.city}</p>
+                  </div>
+                  <div className="p-4 bg-gray-50">
+                    <div className="flex items-start gap-2 mb-3">
+                      <MapPin className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-semibold text-gray-900">{event.venue.name}</p>
+                        <p className="text-gray-600">{event.venue.address}</p>
+                        <p className="text-gray-600">{event.venue.city}</p>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-4">
                     <button
                       onClick={openGoogleMaps}
-                      className="w-full bg-gray-100 text-gray-900 font-semibold py-3 rounded-lg hover:bg-gray-200 transition flex items-center justify-center gap-2"
+                      className="w-full bg-blue-600! text-white! font-semibold py-3 rounded-lg hover:bg-blue-700! transition flex items-center justify-center gap-2"
                     >
                       <MapPin className="w-4 h-4" />
-                      <span>Navigovať</span>
+                      <span>Otvoriť v Google Maps</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Interaktívna Info Box */}
-                <div className="bg-linear-to-br from-green-50 to-green-100 rounded-lg p-6 border border-green-200">
-                  <h4 className="font-bold text-green-900 mb-2">Interaktívna Tabačka Kulturfabrik</h4>
-                  <p className="text-sm text-green-800">Gorkého Košice</p>
+                <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg p-6 border border-blue-200">
+                  <h4 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Miesto konania
+                  </h4>
+                  <p className="text-sm text-blue-800 font-medium">{event.venue.name}</p>
+                  <p className="text-sm text-blue-700">{event.venue.address}</p>
+                  <p className="text-sm text-blue-700">{event.venue.city}</p>
                   <button 
                     onClick={openGoogleMaps}
-                    className="mt-3 text-sm font-semibold text-green-700 hover:text-green-900 flex items-center gap-1"
+                    className="mt-4 w-full bg-blue-600! text-white! text-sm font-semibold py-2 px-4 rounded-lg hover:bg-blue-700! transition flex items-center justify-center gap-2"
                   >
-                    Zobraziť na mape <ChevronRight className="w-4 h-4" />
+                    Navigovať <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>

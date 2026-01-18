@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
-import { SearchBar } from '../components/SearchBar';
 import { Sidebar, type LocationFilters } from '../components/Sidebar';
 import { EventCard } from '../components/EventCard';
 import type { Event as ApiEvent } from '../services/api';
@@ -65,13 +65,35 @@ export const Events: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navigation />
 
-      <div className="w-full bg-linear-to-r from-blue-900 via-blue-800 to-blue-900 py-16 px-4">
+      {/* Hero Section */}
+      <div className="w-full bg-[#1a3b8c] py-24 px-4">
         <div className="max-w-[1440px] mx-auto text-center">
-          <SearchBar 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSubmit={handleSearch}
-          />
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            Tvoj kompas v slovenskom IT svete
+          </h1>
+          <p className="text-lg md:text-xl text-blue-100 mb-12 max-w-3xl mx-auto">
+            Objavuj najlepšie konferencie, meetupy a hackatony v Bratislave, Košiciach a online...
+          </p>
+
+          {/* Floating Search Bar */}
+          <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+            <div className="bg-white rounded-full shadow-2xl flex items-center px-6 py-4 hover:shadow-3xl transition-shadow">
+              <Search className="w-6 h-6 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Hľadať eventy (napr. Java, Security)..."
+                className="flex-1 px-4 text-gray-900 placeholder-gray-400 focus:outline-none text-lg"
+              />
+              <button
+                type="submit"
+                className="bg-blue-600! text-white! px-8 py-3 rounded-full font-semibold hover:bg-blue-700! transition shrink-0"
+              >
+                Hľadať
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 

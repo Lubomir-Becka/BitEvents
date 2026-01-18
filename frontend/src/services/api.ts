@@ -97,11 +97,11 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Token expired alebo neplatný - vyčisti localStorage
-      const currentPath = window.location.pathname;
+      const currentPath = globalThis.location.pathname;
       if (currentPath !== '/login' && currentPath !== '/register') {
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
-        window.location.href = '/login';
+        globalThis.location.href = '/login';
       }
     }
     return Promise.reject(error);
@@ -150,6 +150,32 @@ export interface EventFilters {
   limit?: number;
 }
 
+export interface EventRegistration {
+  id: number;
+  event: Event;
+  registrationDateTime: string;
+}
+
+export interface UpdateProfileDto {
+  fullName: string;
+  email: string;
+  profilePicture?: string | null;
+}
+
+export interface ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface UserResponseDto {
+  id: number;
+  fullName: string;
+  email: string;
+  isOrganizer: boolean;
+  profilePicture: string | null;
+  registrationDate: string;
+}
+
 export const authApi = {
   login: (credentials: LoginRequest) =>
     api.post<AuthResponse>('/auth/login', credentials),
@@ -173,30 +199,38 @@ export const eventsApi = {
 
   delete: (id: number) =>
     api.delete(`/events/${id}`),
-};
 
-export interface EventRegistration {
-  id: number;
-  eventId: number;
-  userId: number;
-  registrationDate: string;
-  status: string;
-  ticketCode?: string;
-  notes?: string;
-}
+  isSaved: (eventId: number) =>
+    api.get<{ isSaved: boolean }>(`/events/${eventId}/saved`),
+
+  saveEvent: (eventId: number) =>
+    api.post(`/events/${eventId}/save`),
+
+  unsaveEvent: (eventId: number) =>
+    api.delete(`/events/${eventId}/save`),
+};
 
 export const registrationApi = {
   register: (eventId: number) =>
-    api.post<EventRegistration>(`/registrations/events/${eventId}`),
+    api.post(`/registrations/events/${eventId}`),
 
-  cancel: (registrationId: number) =>
-    api.delete(`/registrations/${registrationId}`),
+  unregister: (eventId: number) =>
+    api.delete(`/registrations/events/${eventId}`),
 
   getMyRegistrations: () =>
-    api.get<EventRegistration[]>('/registrations/my'),
+    api.get<EventRegistration[]>('/registrations/events/my'),
 
-  getEventRegistrations: (eventId: number) =>
-    api.get<EventRegistration[]>(`/registrations/events/${eventId}`),
+  
+  isRegistered: (eventId: number) =>
+    api.get<{ isRegistered: boolean }>(`/registrations/check/${eventId}`),
+};
+
+export const userApi = {
+  updateProfile: (data: UpdateProfileDto) =>
+    api.put<UserResponseDto>('/auth/me', data),
+
+  changePassword: (data: ChangePasswordDto) =>
+    api.put<void>('/auth/me/password', data),
 };
 
 export default api;
