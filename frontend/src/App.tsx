@@ -7,6 +7,8 @@ import { useAuth } from './context/useAuth';
 const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Register = lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
 const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
+const Events = lazy(() => import('./pages/Events').then(module => ({ default: module.Events })));
+const EventDetail = lazy(() => import('./pages/EventDetail').then(module => ({ default: module.EventDetail })));
 
 // Loading komponent pre Suspense
 const LoadingFallback = () => (
@@ -54,6 +56,22 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute>
+              <Events />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event/:id"
+          element={
+            <ProtectedRoute>
+              <EventDetail />
             </ProtectedRoute>
           }
         />
