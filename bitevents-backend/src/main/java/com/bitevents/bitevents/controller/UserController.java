@@ -28,7 +28,8 @@ public class UserController {
                 user.getFullName(),
                 user.getEmail(),
                 user.getIsOrganizer(),
-                user.getProfilePicture()
+                user.getProfilePicture(),
+                user.getRegistrationDate()
         );
 
         return ResponseEntity.ok(response);

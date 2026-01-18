@@ -73,6 +73,7 @@ public class AuthService {
         dto.setEmail(user.getEmail());
         dto.setProfilePicture(user.getProfilePicture());
         dto.setIsOrganizer(user.getIsOrganizer());
+        dto.setRegistrationDate(user.getRegistrationDate());
         return dto;
     }
 }

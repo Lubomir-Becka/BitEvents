@@ -9,11 +9,12 @@ import java.time.OffsetDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponseDto {
+public class EventRegistrationDto {
     private Long id;
-    private String fullName;
-    private String email;
-    private Boolean isOrganizer;
-    private String profilePicture;
+    private Long eventId;
+    private Long userId;
     private OffsetDateTime registrationDate;
+    private String status;
+    private String ticketCode;
+    private String notes;
 }

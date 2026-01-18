@@ -81,6 +81,26 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS events_start_idx ON events (start_date_time);
 CREATE INDEX IF NOT EXISTS events_status_idx ON events (status);
 
+-- Event registrations table (user attendance/participation)
+CREATE TABLE IF NOT EXISTS event_registrations (
+    id BIGSERIAL PRIMARY KEY,
+    event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    registration_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    status VARCHAR(50) NOT NULL DEFAULT 'Confirmed',
+    ticket_code VARCHAR(100) UNIQUE,
+    notes TEXT,
+    CONSTRAINT event_registrations_unique UNIQUE (event_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS event_registrations_event_idx ON event_registrations (event_id);
+CREATE INDEX IF NOT EXISTS event_registrations_user_idx ON event_registrations (user_id);
+CREATE INDEX IF NOT EXISTS event_registrations_status_idx ON event_registrations (status);
+
+-- Grant explicit permissions on event_registrations table
+GRANT SELECT, INSERT, UPDATE, DELETE ON event_registrations TO bitevents_app;
+GRANT USAGE, SELECT ON SEQUENCE event_registrations_id_seq TO bitevents_app;
+
 -- Trigger function to validate event dates
 CREATE OR REPLACE FUNCTION validate_event_dates()
 RETURNS TRIGGER AS $$
@@ -114,7 +134,7 @@ BEFORE INSERT OR UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION normalize_user_email();
 
 
-GRANT SELECT, INSERT, UPDATE ON TABLE users, venues, events TO bitevents_app;
+GRANT SELECT, INSERT, UPDATE ON TABLE users, venues, events, event_registrations TO bitevents_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitevents_app;
 
 
@@ -169,4 +189,65 @@ INSERT INTO events (organizer_id, venue_id, name, description, type, start_date_
 ((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Conference Center Nitra' LIMIT 1), 'Startup Pitch Night', 'Večer pre startupy a investorov. Pitch prezentácie, networking, možnosť získať financovanie.', 'Startup Event', '2026-03-25 17:00:00+01', '2026-03-25 21:00:00+01', 100, 20.00, 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800', 'Upcoming'),
 ((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Innovation Arena Košice' LIMIT 1), 'Tech Careers Fair 2026', 'Veľtrh IT kariér. Stovky pracovných ponúk od technologických firiem. CV konzultácie zdarma.', 'Kariérny Veľtrh', '2026-05-20 10:00:00+02', '2026-05-20 18:00:00+02', 500, 0.00, 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800', 'Upcoming')
 ON CONFLICT DO NOTHING;
+
+-- Event registrations (test data)
+INSERT INTO event_registrations (event_id, user_id, registration_date, status, ticket_code) VALUES
+-- DevConf 2026: Cloud & Microservices
+((SELECT id FROM events WHERE name = 'DevConf 2026: Cloud & Microservices' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-10 14:30:00+01', 'Confirmed', 'DEVCONF-001'),
+((SELECT id FROM events WHERE name = 'DevConf 2026: Cloud & Microservices' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-12 09:15:00+01', 'Confirmed', 'DEVCONF-002'),
+((SELECT id FROM events WHERE name = 'DevConf 2026: Cloud & Microservices' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-15 16:20:00+01', 'Confirmed', 'DEVCONF-003'),
+
+-- AI & Machine Learning Summit
+((SELECT id FROM events WHERE name = 'AI & Machine Learning Summit' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-14 10:00:00+01', 'Confirmed', 'AIML-001'),
+((SELECT id FROM events WHERE name = 'AI & Machine Learning Summit' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-16 11:30:00+01', 'Confirmed', 'AIML-002'),
+
+-- CyberSecurity Forum Slovakia
+((SELECT id FROM events WHERE name = 'CyberSecurity Forum Slovakia' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-11 15:45:00+01', 'Confirmed', 'CYBER-001'),
+((SELECT id FROM events WHERE name = 'CyberSecurity Forum Slovakia' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-13 08:20:00+01', 'Confirmed', 'CYBER-002'),
+
+-- JavaScript & Frontend Fest
+((SELECT id FROM events WHERE name = 'JavaScript & Frontend Fest' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-17 12:00:00+01', 'Confirmed', 'JSFEST-001'),
+((SELECT id FROM events WHERE name = 'JavaScript & Frontend Fest' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-17 13:30:00+01', 'Confirmed', 'JSFEST-002'),
+((SELECT id FROM events WHERE name = 'JavaScript & Frontend Fest' LIMIT 1), (SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), '2026-01-18 09:00:00+01', 'Confirmed', 'JSFEST-003'),
+
+-- Hackathon: Smart City Solutions
+((SELECT id FROM events WHERE name = 'Hackathon: Smart City Solutions' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-08 10:00:00+01', 'Confirmed', 'HACK-CITY-001'),
+((SELECT id FROM events WHERE name = 'Hackathon: Smart City Solutions' LIMIT 1), (SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), '2026-01-09 14:00:00+01', 'Confirmed', 'HACK-CITY-002'),
+((SELECT id FROM events WHERE name = 'Hackathon: Smart City Solutions' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-10 16:30:00+01', 'Confirmed', 'HACK-CITY-003'),
+
+-- AI Hackathon: Healthcare Innovation
+((SELECT id FROM events WHERE name = 'AI Hackathon: Healthcare Innovation' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-12 11:00:00+01', 'Confirmed', 'HACK-HEALTH-001'),
+((SELECT id FROM events WHERE name = 'AI Hackathon: Healthcare Innovation' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-15 09:30:00+01', 'Confirmed', 'HACK-HEALTH-002'),
+
+-- Docker & Kubernetes Workshop
+((SELECT id FROM events WHERE name = 'Docker & Kubernetes Workshop' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-16 10:15:00+01', 'Confirmed', 'DOCKER-001'),
+((SELECT id FROM events WHERE name = 'Docker & Kubernetes Workshop' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-17 14:45:00+01', 'Confirmed', 'DOCKER-002'),
+((SELECT id FROM events WHERE name = 'Docker & Kubernetes Workshop' LIMIT 1), (SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), '2026-01-18 08:00:00+01', 'Confirmed', 'DOCKER-003'),
+
+-- Python Pre Data Science
+((SELECT id FROM events WHERE name = 'Python Pre Data Science' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-11 13:20:00+01', 'Confirmed', 'PYTHON-001'),
+((SELECT id FROM events WHERE name = 'Python Pre Data Science' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-14 15:00:00+01', 'Confirmed', 'PYTHON-002'),
+
+-- React Native Mobile Development
+((SELECT id FROM events WHERE name = 'React Native Mobile Development' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-13 10:30:00+01', 'Confirmed', 'REACTNAT-001'),
+
+-- JavaScript Bratislava Meetup
+((SELECT id FROM events WHERE name = 'JavaScript Bratislava Meetup' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-18 12:00:00+01', 'Confirmed', 'JSMEETUP-001'),
+((SELECT id FROM events WHERE name = 'JavaScript Bratislava Meetup' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-18 13:00:00+01', 'Confirmed', 'JSMEETUP-002'),
+((SELECT id FROM events WHERE name = 'JavaScript Bratislava Meetup' LIMIT 1), (SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), '2026-01-18 14:00:00+01', 'Confirmed', 'JSMEETUP-003'),
+
+-- DevOps Slovakia Meetup
+((SELECT id FROM events WHERE name = 'DevOps Slovakia Meetup' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-15 11:00:00+01', 'Confirmed', 'DEVOPS-001'),
+((SELECT id FROM events WHERE name = 'DevOps Slovakia Meetup' LIMIT 1), (SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), '2026-01-16 10:00:00+01', 'Confirmed', 'DEVOPS-002'),
+
+-- Startup Pitch Night
+((SELECT id FROM events WHERE name = 'Startup Pitch Night' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-17 09:00:00+01', 'Confirmed', 'STARTUP-001'),
+((SELECT id FROM events WHERE name = 'Startup Pitch Night' LIMIT 1), (SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), '2026-01-18 10:30:00+01', 'Confirmed', 'STARTUP-002'),
+
+-- Tech Careers Fair 2026
+((SELECT id FROM events WHERE name = 'Tech Careers Fair 2026' LIMIT 1), (SELECT id FROM users WHERE email = 'maria.kovacova@example.com' LIMIT 1), '2026-01-12 14:00:00+01', 'Confirmed', 'CAREERS-001'),
+((SELECT id FROM events WHERE name = 'Tech Careers Fair 2026' LIMIT 1), (SELECT id FROM users WHERE email = 'lucia.tothova@example.com' LIMIT 1), '2026-01-14 11:00:00+01', 'Confirmed', 'CAREERS-002'),
+((SELECT id FROM events WHERE name = 'Tech Careers Fair 2026' LIMIT 1), (SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), '2026-01-16 15:30:00+01', 'Confirmed', 'CAREERS-003')
+ON CONFLICT (event_id, user_id) DO NOTHING;
+
 

@@ -1,9 +1,11 @@
 package com.bitevents.bitevents.controller;
 
 import com.bitevents.bitevents.dto.EventDto;
+import com.bitevents.bitevents.dto.EventWithRegistrationDto;
 import com.bitevents.bitevents.dto.PagedEventsResponseDto;
 import com.bitevents.bitevents.model.Event;
 import com.bitevents.bitevents.model.User;
+import com.bitevents.bitevents.service.EventRegistrationService;
 import com.bitevents.bitevents.service.EventService;
 import com.bitevents.bitevents.service.UserService;
 import jakarta.validation.Valid;
@@ -25,10 +27,12 @@ public class EventController {
 
     private final EventService eventService;
     private final UserService userService;
+    private final EventRegistrationService registrationService;
 
-    public EventController(EventService eventService, UserService userService) {
+    public EventController(EventService eventService, UserService userService, EventRegistrationService registrationService) {
         this.eventService = eventService;
         this.userService = userService;
+        this.registrationService = registrationService;
     }
 
     @PostMapping
@@ -66,9 +70,20 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+    public ResponseEntity<EventWithRegistrationDto> getEventById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
         Event event = eventService.findById(id);
-        return ResponseEntity.ok(event);
+        long registrationCount = registrationService.getRegistrationCount(id);
+
+        boolean isUserRegistered = false;
+        if (userDetails != null) {
+            User user = userService.findByEmail(userDetails.getUsername());
+            isUserRegistered = registrationService.isUserRegistered(id, user.getId());
+        }
+
+        EventWithRegistrationDto dto = EventWithRegistrationDto.fromEvent(event, registrationCount, isUserRegistered);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}")
