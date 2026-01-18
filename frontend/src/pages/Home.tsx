@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, Code, Shield, TrendingUp, Palette, Rocket } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
@@ -29,40 +29,35 @@ export const Home: React.FC = () => {
     { icon: Rocket, label: 'Startup', value: 'startup' },
   ];
 
+  // Helper funkcia pre obrázky miest
+  const getCityImage = (cityName: string): string => {
+    if (cityName === 'Bratislava') {
+      return 'https://images.unsplash.com/photo-1555084276-f8dea1ff8f6d?w=800&q=80';
+    }
+    if (cityName === 'Košice') {
+      return 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80';
+  };
+
   // Vypočítaj populárne mestá z eventov zo servera
-  const popularCities = useMemo(() => {
-    const cityMap = new Map<string, number>();
-    
-    events.forEach(event => {
-      if (event.venue?.city) {
-        const city = event.venue.city;
-        cityMap.set(city, (cityMap.get(city) || 0) + 1);
-      }
-    });
+  const cityMap = new Map<string, number>();
+  
+  events.forEach(event => {
+    if (event.venue?.city) {
+      const city = event.venue.city;
+      cityMap.set(city, (cityMap.get(city) || 0) + 1);
+    }
+  });
 
-    // Helper funkcia pre obrázky miest
-    const getCityImage = (cityName: string): string => {
-      if (cityName === 'Bratislava') {
-        return 'https://images.unsplash.com/photo-1555084276-f8dea1ff8f6d?w=800&q=80';
-      }
-      if (cityName === 'Košice') {
-        return 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80';
-      }
-      return 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800&q=80';
-    };
-
-    // Preveď na pole a zoraď podľa počtu eventov
-    const cities = Array.from(cityMap.entries())
-      .map(([name, count]) => ({
-        name,
-        count,
-        image: getCityImage(name),
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 2); // Len prvé 2 mestá
-
-    return cities;
-  }, [events]);
+  const popularCities = Array.from(cityMap.entries())
+    .map(([name, count]) => ({
+      name,
+      count,
+      image: getCityImage(name),
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 2); // Len prvé 2 mestá
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -231,7 +226,7 @@ export const Home: React.FC = () => {
             />
             <button
               type="submit"
-              className="bg-[#1a3b8c] text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#15306f] transition shrink-0"
+              className="bg-[#1a3b8c]! text-white! px-8 py-4 rounded-lg font-semibold hover:bg-[#15306f]! transition shrink-0"
             >
               Odoberať novinky
             </button>

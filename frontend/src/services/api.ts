@@ -175,4 +175,28 @@ export const eventsApi = {
     api.delete(`/events/${id}`),
 };
 
+export interface EventRegistration {
+  id: number;
+  eventId: number;
+  userId: number;
+  registrationDate: string;
+  status: string;
+  ticketCode?: string;
+  notes?: string;
+}
+
+export const registrationApi = {
+  register: (eventId: number) =>
+    api.post<EventRegistration>(`/registrations/events/${eventId}`),
+
+  cancel: (registrationId: number) =>
+    api.delete(`/registrations/${registrationId}`),
+
+  getMyRegistrations: () =>
+    api.get<EventRegistration[]>('/registrations/my'),
+
+  getEventRegistrations: (eventId: number) =>
+    api.get<EventRegistration[]>(`/registrations/events/${eventId}`),
+};
+
 export default api;
