@@ -108,12 +108,71 @@ api.interceptors.response.use(
   }
 );
 
+export interface Event {
+  id: number;
+  name: string;
+  description: string;
+  startDateTime: string;
+  endDateTime: string;
+  type: string;
+  imageUrl?: string;
+  capacity: number;
+  price: number;
+  status: string;
+  venue: {
+    id: number;
+    name: string;
+    city: string;
+    address: string;
+    googleMapsUrl?: string;
+  };
+  organizer: {
+    id: number;
+    fullName: string;
+    email: string;
+    isOrganizer: boolean;
+  };
+  creationDateTime: string;
+}
+
+export interface EventsResponse {
+  events: Event[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface EventFilters {
+  search?: string;
+  city?: string[];
+  category?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const authApi = {
   login: (credentials: LoginRequest) =>
     api.post<AuthResponse>('/auth/login', credentials),
 
   register: (data: RegistrationRequest) =>
     api.post<AuthResponse>('/auth/register', data),
+};
+
+export const eventsApi = {
+  getAll: (filters?: EventFilters) =>
+    api.get<EventsResponse>('/events', { params: filters }),
+
+  getById: (id: number) =>
+    api.get<Event>(`/events/${id}`),
+
+  create: (eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'organizerId'>) =>
+    api.post<Event>('/events', eventData),
+
+  update: (id: number, eventData: Partial<Event>) =>
+    api.put<Event>(`/events/${id}`, eventData),
+
+  delete: (id: number) =>
+    api.delete(`/events/${id}`),
 };
 
 export default api;
