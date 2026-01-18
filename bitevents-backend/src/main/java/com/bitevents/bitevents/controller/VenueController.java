@@ -43,6 +43,12 @@ public class VenueController {
         return ResponseEntity.ok(venues);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<Venue>> getAllVenues() {
+        List<Venue> venues = venueService.findAllVenues();
+        return ResponseEntity.ok(venues);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Venue> getVenueById(@PathVariable Long id) {
         Venue venue = venueService.findById(id);
