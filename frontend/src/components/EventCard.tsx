@@ -1,11 +1,11 @@
 import React from 'react';
-import type { Event } from '../services/api';
+import type { Event as ApiEvent } from '../services/api';
 
-export type { Event };
+export type Event = ApiEvent;
 
 interface EventCardProps {
-  event: Event;
-  onClick?: (event: Event) => void;
+  event: ApiEvent;
+  onClick?: (event: ApiEvent) => void;
 }
 
 const getCategoryColor = (category: string): { bg: string; text: string } => {
@@ -30,7 +30,7 @@ const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     
     // Check if date is valid
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return 'Neznámy dátum';
     }
     
@@ -64,11 +64,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
   const colorClass = getCategoryColor(event.type);
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onClick?.(event)}
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer"
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer w-full text-left"
     >
-      <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden relative">
+      <div className="h-48 bg-linear-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden relative">
         {event.imageUrl ? (
           <img 
             src={event.imageUrl} 
@@ -105,6 +106,6 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
           )}
         </div>
       </div>
-    </div>
+    </button>
   );
 };
