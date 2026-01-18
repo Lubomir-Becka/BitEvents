@@ -31,7 +31,7 @@ public class Event {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "description", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "description", nullable = false)
     private String description;
 
     @Column(name = "type", nullable = false, length = 100)
@@ -51,7 +51,7 @@ public class Event {
     @Column(name = "price", precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
+    @Column(name = "image_url")
     private String imageUrl;
 
     @Column(name = "status", length = 50)

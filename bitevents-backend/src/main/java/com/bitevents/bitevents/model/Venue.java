@@ -24,7 +24,7 @@ public class Venue {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "address", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "address", nullable = false)
     private String address;
 
     @Column(name = "city", nullable = false, length = 100)
@@ -38,6 +38,6 @@ public class Venue {
     @Column(name = "longitude", precision = 11, scale = 8)
     private BigDecimal longitude;
 
-    @Column(name = "google_maps_url", columnDefinition = "TEXT")
+    @Column(name = "google_maps_url")
     private String googleMapsUrl;
 }

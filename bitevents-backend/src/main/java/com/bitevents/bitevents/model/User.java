@@ -1,11 +1,6 @@
 package com.bitevents.bitevents.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import java.time.ZonedDateTime;
-
-import jakarta.persistence.*;
 import lombok.*;
 import java.time.OffsetDateTime;
 
@@ -33,7 +28,7 @@ public class User {
     @Column(name = "registration_date", nullable = false, updatable = false)
     private OffsetDateTime registrationDate = OffsetDateTime.now();
 
-    @Column(name = "profile_picture", columnDefinition = "TEXT")
+    @Column(name = "profile_picture")
     private String profilePicture;
 
     @Column(name = "is_organizer", nullable = false)
