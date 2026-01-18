@@ -5,17 +5,22 @@ services:
     container_name: bitevents_db_container
     restart: always
     environment:
-        POSTGRES_DB: ${DB_NAME}
-        POSTGRES_USER: ${DB_ADMIN_USER}
-        POSTGRES_PASSWORD: ${DB_ROOT_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-bitevents_db}
+      POSTGRES_USER: ${DB_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_ROOT_PASSWORD:-postgres}
     volumes:
-
       - ./pg_data:/var/lib/postgresql/data
-        ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
       - "5432:5432"
-
+    networks:
+      - bitevents-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bitevents_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   backend:
     build:
@@ -24,9 +29,19 @@ services:
     ports:
       - "8080:8080"
     environment:
-
-        DB_USER: ${APP_DB_USER}
-        DB_PASSWORD: ${APP_DB_PASSWORD}
-        DB_URL: jdbc:postgresql://db:5432/${DB_NAME}
+      DB_USER: ${APP_DB_USER:-bitevents_app}
+      DB_PASSWORD: ${APP_DB_PASSWORD:-7RfrMmnc1eoRsVRd2t}
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-bitevents_db}
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_production}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-*}
+    networks:
+      - bitevents-network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: on-failure:3
+
+networks:
+  bitevents-network:
+    driver: bridge
+
