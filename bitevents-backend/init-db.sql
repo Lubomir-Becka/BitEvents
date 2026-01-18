@@ -28,6 +28,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT USAGE ON SEQUENCES TO bitevents_app;
 
 REVOKE CREATE ON SCHEMA public FROM bitevents_app;
+
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
@@ -128,47 +129,44 @@ INSERT INTO users (full_name, email, password_hash, is_organizer, profile_pictur
 ('Martin Szabó', 'martin.szabo@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', true, 'https://i.pravatar.cc/150?img=33')
 ON CONFLICT DO NOTHING;
 
--- Test venues
+-- Test venues (IT-focused)
+-- Use (SELECT id FROM users WHERE email = '...') to get correct user IDs dynamically
 INSERT INTO venues (user_id, name, address, city, latitude, longitude, google_maps_url) VALUES
-(1, 'Mestská športová hala', 'Štefánikova 2', 'Bratislava', 48.1486, 17.1077, 'https://maps.google.com/?q=48.1486,17.1077'),
-(1, 'Kultúrny dom Vajnory', 'Cesta mládeže 89', 'Bratislava', 48.2137, 17.2153, 'https://maps.google.com/?q=48.2137,17.2153'),
-(2, 'Divadlo Aréna', 'Viedenská cesta 10', 'Bratislava', 48.1374, 17.1025, 'https://maps.google.com/?q=48.1374,17.1025'),
-(2, 'NTC Poprad', 'Mnoheľova 25', 'Poprad', 49.0611, 20.2968, 'https://maps.google.com/?q=49.0611,20.2968'),
-(5, 'Výstavisko Agrokomplex', 'Výstavná 1', 'Nitra', 48.3089, 18.0931, 'https://maps.google.com/?q=48.3089,18.0931'),
-(5, 'Steel Aréna', 'Československej armády 1', 'Košice', 48.7164, 21.2611, 'https://maps.google.com/?q=48.7164,21.2611')
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), 'Innovation Hub Bratislava', 'Štefánikova 2', 'Bratislava', 48.1486, 17.1077, 'https://maps.google.com/?q=48.1486,17.1077'),
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), 'Tech Campus Bratislava', 'Cesta mládeže 89', 'Bratislava', 48.2137, 17.2153, 'https://maps.google.com/?q=48.2137,17.2153'),
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), 'Digital Business Center', 'Viedenská cesta 10', 'Bratislava', 48.1374, 17.1025, 'https://maps.google.com/?q=48.1374,17.1025'),
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), 'IT Park Poprad', 'Mnoheľova 25', 'Poprad', 49.0611, 20.2968, 'https://maps.google.com/?q=49.0611,20.2968'),
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), 'Tech Conference Center Nitra', 'Výstavná 1', 'Nitra', 48.3089, 18.0931, 'https://maps.google.com/?q=48.3089,18.0931'),
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), 'Innovation Arena Košice', 'Československej armády 1', 'Košice', 48.7164, 21.2611, 'https://maps.google.com/?q=48.7164,21.2611')
 ON CONFLICT DO NOTHING;
 
--- Test events (various types and dates)
+-- Test events (IT-focused events only)
+-- Use subqueries to get correct organizer_id and venue_id dynamically
 INSERT INTO events (organizer_id, venue_id, name, description, type, start_date_time, end_date_time, capacity, price, image_url, status) VALUES
--- Upcoming concerts
-(1, 1, 'Rockový festival 2026', 'Najväčší rocková udalosť roka s účinkovaním slovenských a zahraničných kapiel. Pripravte sa na nezabudnuteľný zážitok plný skvelej muziky a úžasnej atmosféry.', 'Koncert', '2026-06-15 18:00:00+02', '2026-06-15 23:00:00+02', 500, 25.00, 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800', 'Upcoming'),
-(2, 3, 'Jazzová noc', 'Večer plný jazzovej muziky s medzinárodnými umelcami. Príďte si vychutnať najlepšie jazzové skladby v intímnom prostredí divadla.', 'Koncert', '2026-03-20 20:00:00+01', '2026-03-20 23:30:00+01', 150, 18.50, 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800', 'Upcoming'),
-(5, 6, 'Klasická hudba: Vivaldi a Bach', 'Koncert klasickej hudby s dielami veľkých majstrov. Symfonický orchester zahrá najznámejšie skladby Vivaldiho a Bacha.', 'Koncert', '2026-04-10 19:00:00+02', '2026-04-10 21:30:00+02', 300, 22.00, 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800', 'Upcoming'),
+-- IT Conferences
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Conference Center Nitra' LIMIT 1), 'DevConf 2026: Cloud & Microservices', 'Medzinárodná konferencia zameraná na cloud computing a mikroslužby. Prednášky od expertov z AWS, Azure a Google Cloud.', 'Konferencia', '2026-03-15 09:00:00+01', '2026-03-16 18:00:00+01', 500, 120.00, 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'IT Park Poprad' LIMIT 1), 'AI & Machine Learning Summit', 'Summit o umelej inteligencii a strojovom učení. Najnovšie trendy v AI, deep learning a neural networks.', 'Konferencia', '2026-04-20 09:00:00+02', '2026-04-21 17:00:00+02', 400, 150.00, 'https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Digital Business Center' LIMIT 1), 'CyberSecurity Forum Slovakia', 'Konferencia o kybernetickej bezpečnosti. Ochrana dát, etické hackovanie a zabezpečenie infraštruktúry.', 'Konferencia', '2026-05-10 09:00:00+02', '2026-05-11 18:00:00+02', 300, 95.00, 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Innovation Hub Bratislava' LIMIT 1), 'JavaScript & Frontend Fest', 'Konferencia pre frontend vývojárov. React, Vue, Angular, Next.js a najnovšie web technológie.', 'Konferencia', '2026-06-05 09:00:00+02', '2026-06-06 18:00:00+02', 350, 85.00, 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800', 'Upcoming'),
 
--- Sports events
-(1, 1, 'Futbalový turnaj amatérskych tímov', 'Prestížny turnaj pre amatérske futbalové tímy z celého Slovenska. Zápasy celý deň, finále večer.', 'Šport', '2026-05-01 09:00:00+02', '2026-05-01 18:00:00+02', 1000, 5.00, 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800', 'Upcoming'),
-(2, 6, 'Hokejový zápas: HC Košice vs. HC Nitra', 'Extraligový zápas medzi tradičnými rivalmi. Očakáva sa vypredaná aréna a skvelá atmosféra.', 'Šport', '2026-02-28 17:30:00+01', '2026-02-28 20:00:00+01', 8000, 15.00, 'https://images.unsplash.com/photo-1515703407324-5f753afd8be8?w=800', 'Upcoming'),
-(5, 1, 'Volejbalový turnaj', 'Medzinárodný volejbalový turnaj s účasťou najlepších slovenských a českých tímov.', 'Šport', '2026-03-15 10:00:00+01', '2026-03-15 19:00:00+01', 500, 8.00, 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800', 'Upcoming'),
+-- Hackathons
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Innovation Hub Bratislava' LIMIT 1), 'Hackathon: Smart City Solutions', '24-hodinový hackathon na tému smart cities. Vyvíjajte riešenia pre inteligentné mestá budúcnosti.', 'Hackathon', '2026-02-28 18:00:00+01', '2026-03-01 18:00:00+01', 100, 0.00, 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Conference Center Nitra' LIMIT 1), 'AI Hackathon: Healthcare Innovation', 'Hackathon zameraný na AI riešenia v zdravotníctve. Spolupráca s lekármi a AI vývojármi.', 'Hackathon', '2026-04-10 09:00:00+02', '2026-04-12 18:00:00+02', 80, 25.00, 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Innovation Arena Košice' LIMIT 1), 'GameDev Hackathon', '48-hodinový hackathon na vývoj hier. Unity, Unreal Engine, indiehry. Ocenenia pre víťazov.', 'Hackathon', '2026-07-15 10:00:00+02', '2026-07-17 18:00:00+02', 120, 15.00, 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800', 'Upcoming'),
 
--- Exhibitions
-(2, 5, 'Výstava moderného umenia', 'Rozsiahla výstava súčasného umenia slovenských aj zahraničných umelcov. Viac ako 100 exponátov.', 'Výstava', '2026-03-01 10:00:00+01', '2026-03-31 18:00:00+02', 200, 0.00, 'https://images.unsplash.com/photo-1536924940846-227afb31e2a5?w=800', 'Upcoming'),
-(5, 5, 'Agrokomplex 2026', 'Najväčšia poľnohospodárska výstava na Slovensku. Prezentácia najnovších technológií a produktov.', 'Výstava', '2026-08-20 09:00:00+02', '2026-08-23 18:00:00+02', 5000, 12.00, 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800', 'Upcoming'),
+-- Workshops & Training
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Campus Bratislava' LIMIT 1), 'Docker & Kubernetes Workshop', 'Praktický workshop o kontajnerizácii a orchestrácii. Naučte sa Docker a Kubernetes od základov.', 'Workshop', '2026-02-25 14:00:00+01', '2026-02-25 18:00:00+01', 30, 45.00, 'https://images.unsplash.com/photo-1605745341112-85968b19335b?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Digital Business Center' LIMIT 1), 'Python Pre Data Science', 'Workshop o Pythone pre dátovú vedu. NumPy, Pandas, Matplotlib, machine learning s scikit-learn.', 'Workshop', '2026-03-20 10:00:00+01', '2026-03-20 17:00:00+01', 25, 60.00, 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'IT Park Poprad' LIMIT 1), 'React Native Mobile Development', 'Intenzívny kurz vývoja mobilných aplikácií v React Native. iOS a Android z jedného codebase.', 'Workshop', '2026-04-05 09:00:00+02', '2026-04-06 17:00:00+02', 20, 120.00, 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Campus Bratislava' LIMIT 1), 'Git & GitHub Pro Tips', 'Workshop o pokročilom používaní Git a GitHub. Branching stratégie, CI/CD, code review best practices.', 'Workshop', '2026-05-15 14:00:00+02', '2026-05-15 18:00:00+02', 35, 30.00, 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=800', 'Upcoming'),
 
--- Workshops
-(1, 2, 'Workshop fotografovania pre začiatočníkov', 'Naučte sa základy fotografovania od profesionálneho fotografa. Budeme sa venovať kompozícii, svetlu a nastaveniu fotoaparátu.', 'Workshop', '2026-02-25 14:00:00+01', '2026-02-25 18:00:00+01', 20, 35.00, 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800', 'Upcoming'),
-(2, 3, 'Divadelný workshop: Herecké techniky', 'Intenzívny workshop zameraný na základné herecké techniky a improvizáciu. Vhodné pre začiatočníkov.', 'Workshop', '2026-03-05 10:00:00+01', '2026-03-05 16:00:00+01', 15, 40.00, 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800', 'Upcoming'),
-(5, 4, 'Kurz varenia talianskej kuchyne', 'Pripravte si autentické talianske jedlá pod vedením skúseného šéfkuchára. Ochutnávka na konci kurzu.', 'Workshop', '2026-04-12 15:00:00+02', '2026-04-12 19:00:00+02', 12, 45.00, 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800', 'Upcoming'),
+-- Meetups
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Digital Business Center' LIMIT 1), 'JavaScript Bratislava Meetup', 'Mesačný meetup JavaScript komunity. Prednášky, networking, diskusie o najnovších JS trendoch.', 'Meetup', '2026-02-20 18:00:00+01', '2026-02-20 21:00:00+01', 50, 0.00, 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'jan.novak@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Campus Bratislava' LIMIT 1), 'DevOps Slovakia Meetup', 'Stretnutie DevOps komunity. Zdieľanie skúseností s CI/CD, infraštruktúrou a automatizáciou.', 'Meetup', '2026-03-10 18:00:00+01', '2026-03-10 21:00:00+01', 40, 0.00, 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'IT Park Poprad' LIMIT 1), 'Data Science Košice Meetup', 'Komunitné stretnutie data scientistov. Prednášky o ML modeloch, dátovej analýze a vizualizácii.', 'Meetup', '2026-04-15 18:00:00+02', '2026-04-15 21:00:00+02', 45, 0.00, 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800', 'Upcoming'),
 
--- Past events
-(1, 1, 'Novoročný koncert 2026', 'Tradičný novoročný koncert s klasickou hudbou a ľudovými piesňami.', 'Koncert', '2026-01-05 19:00:00+01', '2026-01-05 21:30:00+01', 300, 20.00, 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800', 'Completed'),
-(2, 3, 'Silvestrovská párty 2025', 'Veľká silvestrovská oslava s DJ, tancom a polnočným ohňostrojom.', 'Párty', '2025-12-31 21:00:00+01', '2026-01-01 03:00:00+01', 250, 50.00, 'https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800', 'Completed'),
-
--- Theater performances
-(2, 3, 'Divadelné predstavenie: Romeo a Júlia', 'Klasická hra Williama Shakespeara v modernej réžii. Nezabudnuteľný zážitok pre milovníkov divadla.', 'Divadlo', '2026-03-28 19:30:00+01', '2026-03-28 22:00:00+01', 150, 15.00, 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800', 'Upcoming'),
-(2, 3, 'Komédia: Smiech je liek', 'Zábavná komédia plná humoru a nečakaných zvratov. Ideálne na relaxáciu po náročnom týždni.', 'Divadlo', '2026-05-10 20:00:00+02', '2026-05-10 22:00:00+02', 150, 12.00, 'https://images.unsplash.com/photo-1585699324551-f6c309eedeca?w=800', 'Upcoming'),
-
--- Conferences
-(5, 5, 'IT konferencia: Budúcnosť technológií', 'Medzinárodná konferencia o najnovších trendoch v IT. Prednášajú odborníci z Google, Microsoft a ďalších firiem.', 'Konferencia', '2026-06-05 09:00:00+02', '2026-06-06 18:00:00+02', 500, 150.00, 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800', 'Upcoming'),
-(5, 4, 'Startup Summit 2026', 'Stretnutie startupov, investorov a podnikateľov. Networking, prednášky a pitch súťaž.', 'Konferencia', '2026-07-15 10:00:00+02', '2026-07-15 19:00:00+02', 300, 80.00, 'https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800', 'Upcoming')
+-- Startup & Business Events
+((SELECT id FROM users WHERE email = 'martin.szabo@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Tech Conference Center Nitra' LIMIT 1), 'Startup Pitch Night', 'Večer pre startupy a investorov. Pitch prezentácie, networking, možnosť získať financovanie.', 'Startup Event', '2026-03-25 17:00:00+01', '2026-03-25 21:00:00+01', 100, 20.00, 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800', 'Upcoming'),
+((SELECT id FROM users WHERE email = 'peter.horvath@example.com' LIMIT 1), (SELECT id FROM venues WHERE name = 'Innovation Arena Košice' LIMIT 1), 'Tech Careers Fair 2026', 'Veľtrh IT kariér. Stovky pracovných ponúk od technologických firiem. CV konzultácie zdarma.', 'Kariérny Veľtrh', '2026-05-20 10:00:00+02', '2026-05-20 18:00:00+02', 500, 0.00, 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800', 'Upcoming')
 ON CONFLICT DO NOTHING;
 
