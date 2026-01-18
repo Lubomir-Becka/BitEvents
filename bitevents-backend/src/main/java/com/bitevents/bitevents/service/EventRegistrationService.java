@@ -67,6 +67,16 @@ public class EventRegistrationService {
         registrationRepository.save(registration);
     }
 
+    public void cancelRegistrationByEvent(Long eventId, Long userId) {
+        Event event = eventService.findById(eventId);
+        User user = userService.findById(userId);
+
+        EventRegistration registration = registrationRepository.findByEventAndUser(event, user)
+                .orElseThrow(() -> new EntityNotFoundException("Registrácia nebola nájdená."));
+
+        registrationRepository.delete(registration);
+    }
+
     public List<EventRegistration> getUserRegistrations(Long userId) {
         User user = userService.findById(userId);
         return registrationRepository.findAllByUser(user);

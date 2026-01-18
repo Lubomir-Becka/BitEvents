@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/registrations")
@@ -33,16 +34,16 @@ public class EventRegistrationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(registration);
     }
 
-    @DeleteMapping("/{registrationId}")
-    public ResponseEntity<Void> cancelRegistration(
-            @PathVariable Long registrationId,
+    @DeleteMapping("/events/{eventId}")
+    public ResponseEntity<Void> unregisterFromEvent(
+            @PathVariable Long eventId,
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.findByEmail(userDetails.getUsername());
-        registrationService.cancelRegistration(registrationId, user.getId());
+        registrationService.cancelRegistrationByEvent(eventId, user.getId());
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/my")
+    @GetMapping("/events/my")
     public ResponseEntity<List<EventRegistration>> getMyRegistrations(
             @AuthenticationPrincipal UserDetails userDetails) {
         User user = userService.findByEmail(userDetails.getUsername());
@@ -54,5 +55,14 @@ public class EventRegistrationController {
     public ResponseEntity<List<EventRegistration>> getEventRegistrations(@PathVariable Long eventId) {
         List<EventRegistration> registrations = registrationService.getEventRegistrations(eventId);
         return ResponseEntity.ok(registrations);
+    }
+
+    @GetMapping("/check/{eventId}")
+    public ResponseEntity<Map<String, Boolean>> checkEventRegistration(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+        boolean isRegistered = registrationService.isUserRegistered(eventId, user.getId());
+        return ResponseEntity.ok(Map.of("isRegistered", isRegistered));
     }
 }
