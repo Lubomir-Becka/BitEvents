@@ -4,9 +4,12 @@ import com.bitevents.bitevents.dto.EventDto;
 import com.bitevents.bitevents.dto.EventWithRegistrationDto;
 import com.bitevents.bitevents.dto.PagedEventsResponseDto;
 import com.bitevents.bitevents.model.Event;
+import com.bitevents.bitevents.model.EventImage;
 import com.bitevents.bitevents.model.User;
+import com.bitevents.bitevents.service.EventImageService;
 import com.bitevents.bitevents.service.EventRegistrationService;
 import com.bitevents.bitevents.service.EventService;
+import com.bitevents.bitevents.service.FileStorageService;
 import com.bitevents.bitevents.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -18,8 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/events")
@@ -28,11 +35,18 @@ public class EventController {
     private final EventService eventService;
     private final UserService userService;
     private final EventRegistrationService registrationService;
+    private final EventImageService eventImageService;
+    private final FileStorageService fileStorageService;
 
-    public EventController(EventService eventService, UserService userService, EventRegistrationService registrationService) {
+    public EventController(EventService eventService, UserService userService,
+                          EventRegistrationService registrationService,
+                          EventImageService eventImageService,
+                          FileStorageService fileStorageService) {
         this.eventService = eventService;
         this.userService = userService;
         this.registrationService = registrationService;
+        this.eventImageService = eventImageService;
+        this.fileStorageService = fileStorageService;
     }
 
     @PostMapping
@@ -113,6 +127,75 @@ public class EventController {
         }
         
         eventService.deleteEvent(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Event Image Management
+
+    @PostMapping("/{eventId}/images")
+    public ResponseEntity<EventImage> uploadEventImage(
+            @PathVariable Long eventId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "isPrimary", required = false, defaultValue = "false") Boolean isPrimary,
+            @RequestParam(value = "displayOrder", required = false) Integer displayOrder,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User currentUser = userService.findByEmail(userDetails.getUsername());
+
+        if (!eventService.isEventOwner(eventId, currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Store the file
+        String fileName = fileStorageService.storeFile(file, "events");
+
+        // Build the file URL
+        String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/files/")
+                .path(fileName)
+                .toUriString();
+
+        // Save image to database
+        EventImage eventImage = eventImageService.addImageToEvent(eventId, fileUrl, isPrimary, displayOrder);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventImage);
+    }
+
+    @GetMapping("/{eventId}/images")
+    public ResponseEntity<List<EventImage>> getEventImages(@PathVariable Long eventId) {
+        List<EventImage> images = eventImageService.getEventImages(eventId);
+        return ResponseEntity.ok(images);
+    }
+
+    @PutMapping("/{eventId}/images/{imageId}/set-primary")
+    public ResponseEntity<Void> setPrimaryImage(
+            @PathVariable Long eventId,
+            @PathVariable Long imageId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User currentUser = userService.findByEmail(userDetails.getUsername());
+
+        if (!eventService.isEventOwner(eventId, currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        eventImageService.setPrimaryImage(imageId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/{eventId}/images/{imageId}")
+    public ResponseEntity<Void> deleteEventImage(
+            @PathVariable Long eventId,
+            @PathVariable Long imageId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User currentUser = userService.findByEmail(userDetails.getUsername());
+
+        if (!eventService.isEventOwner(eventId, currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        eventImageService.deleteImage(imageId);
         return ResponseEntity.noContent().build();
     }
 }
