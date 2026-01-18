@@ -9,6 +9,8 @@ const Register = lazy(() => import('./pages/Register').then(module => ({ default
 const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Events = lazy(() => import('./pages/Events').then(module => ({ default: module.Events })));
 const EventDetail = lazy(() => import('./pages/EventDetail').then(module => ({ default: module.EventDetail })));
+const UserProfile = lazy(() => import('./pages/UserProfile').then(module => ({ default: module.UserProfile })));
+const SavedEvents = lazy(() => import('./pages/SavedEvents').then(module => ({ default: module.SavedEvents })));
 
 // Loading komponent pre Suspense
 const LoadingFallback = () => (
@@ -53,25 +55,29 @@ const AppRoutes: React.FC = () => {
         />
         <Route
           path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
+          element={<Home />}
         />
         <Route
           path="/events"
+          element={<Events />}
+        />
+        <Route
+          path="/event/:id"
+          element={<EventDetail />}
+        />
+        <Route
+          path="/profile"
           element={
             <ProtectedRoute>
-              <Events />
+              <UserProfile />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/event/:id"
+          path="/saved-events"
           element={
             <ProtectedRoute>
-              <EventDetail />
+              <SavedEvents />
             </ProtectedRoute>
           }
         />

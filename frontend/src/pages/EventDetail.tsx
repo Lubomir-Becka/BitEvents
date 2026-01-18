@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { MapPin, Clock, Tag, User, ChevronRight, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Tag, User, ChevronRight, Loader2, Heart } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
-import { eventsApi, type Event, getErrorMessage } from '../services/api';
+import { eventsApi, registrationApi, type Event, getErrorMessage } from '../services/api';
+import { useAuth } from '../context/useAuth';
 
 export const EventDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -22,6 +27,9 @@ export const EventDetail: React.FC = () => {
       try {
         const response = await eventsApi.getById(Number(id));
         setEvent(response.data);
+        // TODO: Načítať zo servera, či je event uložený a či je užívateľ zaregistrovaný
+        setIsSaved(false);
+        setIsRegistered(false);
       } catch (err) {
         setError(getErrorMessage(err));
       } finally {
@@ -49,13 +57,43 @@ export const EventDetail: React.FC = () => {
     });
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/event/${id}` } });
+      return;
+    }
+
+    if (!id) return;
+
     setIsRegistering(true);
-    // Registrácia na event - buďe implementovaná s backend API
-    setTimeout(() => {
-      setIsRegistering(false);
+
+    try {
+      await registrationApi.register(Number(id));
+      // Refresh event data to update registration status
+      const response = await eventsApi.getById(Number(id));
+      setEvent(response.data);
+      setIsRegistered(true);
       alert('Registrácia úspešná!');
-    }, 1500);
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      alert(`Chyba pri registrácii: ${errorMsg}`);
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleSaveEvent = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/event/${id}` } });
+      return;
+    }
+
+    setIsSaving(true);
+    // TODO: Implementovať uloženie cez API
+    setTimeout(() => {
+      setIsSaved(!isSaved);
+      setIsSaving(false);
+    }, 500);
   };
 
   const openGoogleMaps = () => {
@@ -65,6 +103,21 @@ export const EventDetail: React.FC = () => {
       const query = encodeURIComponent(`${event.venue.name}, ${event.venue.address}, ${event.venue.city}`);
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
     }
+  };
+
+  const getRegisterButtonText = () => {
+    if (isRegistering) {
+      return (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Registrujem...</span>
+        </>
+      );
+    }
+    if (isRegistered) {
+      return <span>✓ UŽ STE ZAREGISTROVANÝ</span>;
+    }
+    return <span>REGISTROVAŤ SA NA EVENT</span>;
   };
 
   if (isLoading) {
@@ -265,18 +318,30 @@ export const EventDetail: React.FC = () => {
 
                   <button
                     onClick={handleRegister}
-                    disabled={isRegistering}
-                    className="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    disabled={isRegistering || isRegistered}
+                    className={`w-full font-bold py-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3 ${
+                      isRegistered
+                        ? 'bg-green-600! text-white!'
+                        : 'bg-blue-600! text-white! hover:bg-blue-700!'
+                    }`}
                   >
-                    {isRegistering ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Registrujem...</span>
-                      </>
-                    ) : (
-                      <span>REGISTROVAŤ SA NA EVENT</span>
-                    )}
+                    {getRegisterButtonText()}
                   </button>
+
+                  {isAuthenticated && (
+                    <button
+                      onClick={handleSaveEvent}
+                      disabled={isSaving}
+                      className={`w-full font-bold py-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+                        isSaved
+                          ? 'bg-red-50! text-red-600! border-2 border-red-600! hover:bg-red-100!'
+                          : 'bg-gray-100! text-gray-700! border-2 border-gray-300! hover:bg-gray-200!'
+                      }`}
+                    >
+                      <Heart className={`w-5 h-5 ${isSaved ? 'fill-red-600' : ''}`} />
+                      <span>{isSaved ? 'Uložené' : 'Uložiť event'}</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Google Maps */}
