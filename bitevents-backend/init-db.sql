@@ -44,6 +44,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- Use a case-insensitive unique index for emails (avoid duplicates with different case)
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (lower(email));
 
+-- Grant permissions on users
+GRANT SELECT, INSERT, UPDATE, DELETE ON users TO bitevents_app;
+GRANT USAGE, SELECT ON SEQUENCE users_id_seq TO bitevents_app;
+
 
 CREATE TABLE IF NOT EXISTS venues (
     id BIGSERIAL PRIMARY KEY,
@@ -57,6 +61,10 @@ CREATE TABLE IF NOT EXISTS venues (
 );
 
 CREATE INDEX IF NOT EXISTS venues_city_idx ON venues (city);
+
+-- Grant permissions on venues
+GRANT SELECT, INSERT, UPDATE, DELETE ON venues TO bitevents_app;
+GRANT USAGE, SELECT ON SEQUENCE venues_id_seq TO bitevents_app;
 
 -- Events table
 CREATE TABLE IF NOT EXISTS events (
@@ -81,6 +89,10 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS events_start_idx ON events (start_date_time);
 CREATE INDEX IF NOT EXISTS events_status_idx ON events (status);
 
+-- Grant permissions on events
+GRANT SELECT, INSERT, UPDATE, DELETE ON events TO bitevents_app;
+GRANT USAGE, SELECT ON SEQUENCE events_id_seq TO bitevents_app;
+
 -- Event registrations table (user attendance/participation)
 CREATE TABLE IF NOT EXISTS event_registrations (
     id BIGSERIAL PRIMARY KEY,
@@ -98,14 +110,20 @@ CREATE INDEX IF NOT EXISTS event_registrations_user_idx ON event_registrations (
 CREATE INDEX IF NOT EXISTS event_registrations_status_idx ON event_registrations (status);
 
 -- Event images table (multiple images per event)
+-- 1. Vytvorenie tabuľky
 CREATE TABLE IF NOT EXISTS event_images (
     id BIGSERIAL PRIMARY KEY,
     event_id BIGINT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     image_url TEXT NOT NULL,
     is_primary BOOLEAN NOT NULL DEFAULT false,
-    display_order INTEGER,
-    CONSTRAINT event_images_one_primary_per_event UNIQUE (event_id, is_primary) WHERE is_primary = true
-);
+    display_order INTEGER
+    );
+
+-- 2. Vytvorenie unikátneho indexu s podmienkou
+-- Toto zabezpečí, že pre jedno event_id môže byť is_primary = true iba raz.
+CREATE UNIQUE INDEX IF NOT EXISTS event_images_one_primary_per_event
+    ON event_images (event_id)
+    WHERE is_primary = true;
 
 CREATE INDEX IF NOT EXISTS event_images_event_idx ON event_images (event_id);
 CREATE INDEX IF NOT EXISTS event_images_primary_idx ON event_images (event_id, is_primary) WHERE is_primary = true;
@@ -167,7 +185,8 @@ BEFORE INSERT OR UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION normalize_user_email();
 
 
-GRANT SELECT, INSERT, UPDATE ON TABLE users, venues, events, event_registrations TO bitevents_app;
+-- Final comprehensive grant (redundant but ensures all permissions are set)
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE users, venues, events, event_registrations, event_images, saved_events TO bitevents_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitevents_app;
 
 
