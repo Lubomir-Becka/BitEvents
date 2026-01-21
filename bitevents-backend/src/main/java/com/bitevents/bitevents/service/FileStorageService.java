@@ -13,12 +13,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class FileStorageService {
 
     private final Path fileStorageLocation;
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final List<String> ALLOWED_IMAGE_TYPES = Arrays.asList(
+        "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"
+    );
+    private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
+        ".jpg", ".jpeg", ".png", ".gif", ".webp"
+    );
 
     public FileStorageService(FileStorageProperties fileStorageProperties) {
         this.fileStorageLocation = Paths.get(fileStorageProperties.getUploadDir())
@@ -32,21 +41,48 @@ public class FileStorageService {
     }
 
     public String storeFile(MultipartFile file, String subfolder) {
+        // Validate file is not empty
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Súbor je prázdny");
+        }
+
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("Súbor je príliš veľký. Maximálna veľkosť je 5MB");
+        }
+
+        // Validate file type
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException("Neplatný typ súboru. Povolené sú iba obrázky (JPG, PNG, GIF, WebP)");
+        }
+
         // Normalize file name
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
 
         try {
             // Check if the file's name contains invalid characters
             if(originalFileName.contains("..")) {
-                throw new RuntimeException("Filename contains invalid path sequence " + originalFileName);
+                throw new IllegalArgumentException("Názov súboru obsahuje neplatné znaky: " + originalFileName);
+            }
+
+            // Validate file extension
+            String fileExtension = "";
+            if (originalFileName.contains(".")) {
+                fileExtension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
+            }
+
+            if (!ALLOWED_EXTENSIONS.contains(fileExtension)) {
+                throw new IllegalArgumentException("Nepovolená prípona súboru: " + fileExtension);
             }
 
             // Generate unique filename
-            String fileExtension = "";
-            if (originalFileName.contains(".")) {
-                fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
             String newFileName = UUID.randomUUID().toString() + fileExtension;
+
+            // Validate and sanitize subfolder
+            if (subfolder != null && (subfolder.contains("..") || subfolder.contains("/"))) {
+                throw new IllegalArgumentException("Neplatný názov podpriečinka");
+            }
 
             // Create subfolder if needed
             Path targetLocation = this.fileStorageLocation;

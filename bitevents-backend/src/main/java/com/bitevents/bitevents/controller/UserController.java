@@ -110,4 +110,12 @@ public class UserController {
         response.put("profilePictureUrl", fileUrl);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteAccount(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+        userService.deleteUser(user.getId());
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -32,6 +32,11 @@ public class EventRegistrationService {
         Event event = eventService.findById(eventId);
         User user = userService.findById(userId);
 
+        // Check if event has already started or passed
+        if (event.getStartDateTime().isBefore(OffsetDateTime.now())) {
+            throw new IllegalStateException("Nemôžete sa registrovať na event, ktorý už začal alebo skončil.");
+        }
+
         // Check if user is already registered
         if (registrationRepository.existsByEventAndUser(event, user)) {
             throw new IllegalStateException("Používateľ je už registrovaný na tento event.");

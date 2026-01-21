@@ -36,6 +36,11 @@ public class EventService {
         User organizer = userRepository.findById(dto.getOrganizerId())
                 .orElseThrow(() -> new EntityNotFoundException("Organizátor s ID " + dto.getOrganizerId() + " nebol nájdený."));
 
+        // Validate that user is an organizer
+        if (!organizer.getIsOrganizer()) {
+            throw new IllegalArgumentException("Používateľ nie je organizátor a nemôže vytvárať eventy.");
+        }
+
         Venue venue = venueService.findById(dto.getVenueId());
 
         Event event = getEvent(dto, organizer, venue);
@@ -116,6 +121,12 @@ public class EventService {
     public boolean isEventOwner(Long eventId, Long userId) {
         Event event = findById(eventId);
         return event.getOrganizer().getId().equals(userId);
+    }
+
+    public List<Event> getEventsByOrganizer(Long organizerId) {
+        User organizer = userRepository.findById(organizerId)
+                .orElseThrow(() -> new EntityNotFoundException("Organizátor nebol nájdený."));
+        return eventRepository.findByOrganizerOrderByStartDateTimeDesc(organizer);
     }
 
     private void validateTimeRange(OffsetDateTime start, OffsetDateTime end) {

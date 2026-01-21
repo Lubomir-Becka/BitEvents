@@ -57,4 +57,9 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(changePasswordDto.getNewPassword()));
         userRepository.save(user);
     }
+
+    public void deleteUser(Long userId) {
+        User user = findById(userId);
+        userRepository.delete(user);
+    }
 }

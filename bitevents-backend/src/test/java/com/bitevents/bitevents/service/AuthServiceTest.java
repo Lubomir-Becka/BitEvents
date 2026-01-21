@@ -47,7 +47,7 @@ class AuthServiceTest {
         registrationDto.setFullName("Test User");
         registrationDto.setEmail("test@example.com");
         registrationDto.setPassword("password123");
-        registrationDto.setOrganizer(true);
+        registrationDto.setIsOrganizer(true);
 
         loginDto = new LoginDto();
         loginDto.setEmail("test@example.com");

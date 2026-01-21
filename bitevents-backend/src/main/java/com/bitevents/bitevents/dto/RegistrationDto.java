@@ -24,5 +24,5 @@ public class RegistrationDto {
             message = "Heslo musí mať aspoň 8 znakov, obsahovať jedno číslo, jedno malé a jedno veľké písmeno a jeden špeciálny znak")
     private String password;
 
-    private boolean isOrganizer;
+    private Boolean isOrganizer = false; // Default to false if not provided
 }
