@@ -1,5 +1,6 @@
 package com.bitevents.bitevents.controller;
 
+import com.bitevents.bitevents.dto.CreateEventWithVenueDto;
 import com.bitevents.bitevents.dto.EventDto;
 import com.bitevents.bitevents.model.Event;
 import com.bitevents.bitevents.model.EventRegistration;
@@ -93,6 +94,25 @@ public class OrganizerController {
 
         eventDto.setOrganizerId(organizer.getId());
         Event newEvent = eventService.createEvent(eventDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(newEvent);
+    }
+
+    /**
+     * Create a new event with venue (organizer only) - accepts venue info in request
+     */
+    @PostMapping("/events/with-venue")
+    public ResponseEntity<Event> createEventWithVenue(
+            @RequestBody @Valid CreateEventWithVenueDto eventDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User organizer = userService.findByEmail(userDetails.getUsername());
+
+        // Verify user is organizer
+        if (!organizer.getIsOrganizer()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        Event newEvent = eventService.createEventWithVenue(eventDto, organizer.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(newEvent);
     }
 

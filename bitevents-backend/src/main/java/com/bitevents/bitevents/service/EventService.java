@@ -1,6 +1,8 @@
 package com.bitevents.bitevents.service;
 
+import com.bitevents.bitevents.dto.CreateEventWithVenueDto;
 import com.bitevents.bitevents.dto.EventDto;
+import com.bitevents.bitevents.dto.VenueDto;
 import com.bitevents.bitevents.model.Event;
 import com.bitevents.bitevents.model.User;
 import com.bitevents.bitevents.model.Venue;
@@ -44,6 +46,46 @@ public class EventService {
         Venue venue = venueService.findById(dto.getVenueId());
 
         Event event = getEvent(dto, organizer, venue);
+        event.setCreationDateTime(OffsetDateTime.now());
+
+        return eventRepository.save(event);
+    }
+
+    public Event createEventWithVenue(CreateEventWithVenueDto dto, Long organizerId) {
+        validateTimeRange(dto.getStartDateTime(), dto.getEndDateTime());
+
+        User organizer = userRepository.findById(organizerId)
+                .orElseThrow(() -> new EntityNotFoundException("Organizátor s ID " + organizerId + " nebol nájdený."));
+
+        // Validate that user is an organizer
+        if (!organizer.getIsOrganizer()) {
+            throw new IllegalArgumentException("Používateľ nie je organizátor a nemôže vytvárať eventy.");
+        }
+
+        // Create venue first
+        VenueDto venueDto = new VenueDto();
+        venueDto.setName(dto.getVenue().getName());
+        venueDto.setAddress(dto.getVenue().getAddress());
+        venueDto.setCity(dto.getVenue().getCity());
+        venueDto.setLatitude(dto.getVenue().getLatitude());
+        venueDto.setLongitude(dto.getVenue().getLongitude());
+        venueDto.setGoogleMapsUrl(dto.getVenue().getGoogleMapsUrl());
+
+        Venue venue = venueService.createVenue(venueDto, organizer);
+
+        // Create event
+        Event event = new Event();
+        event.setOrganizer(organizer);
+        event.setVenue(venue);
+        event.setName(dto.getName());
+        event.setDescription(dto.getDescription());
+        event.setType(dto.getType());
+        event.setStartDateTime(dto.getStartDateTime());
+        event.setEndDateTime(dto.getEndDateTime());
+        event.setCapacity(dto.getCapacity());
+        event.setPrice(dto.getPrice() != null ? dto.getPrice() : BigDecimal.ZERO);
+        event.setImageUrl(dto.getImageUrl());
+        event.setStatus(dto.getStatus() != null ? dto.getStatus() : "Upcoming");
         event.setCreationDateTime(OffsetDateTime.now());
 
         return eventRepository.save(event);

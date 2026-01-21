@@ -163,6 +163,11 @@ export interface EventsResponse {
   page: number;
   limit: number;
 }
+  events: Event[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export interface EventFilters {
   search?: string;
@@ -383,9 +388,9 @@ export const organizerApi = {
   getEventStatistics: (eventId: number) =>
     api.get<EventStatistics>(`/organizer/events/${eventId}/statistics`),
 
-  // Create new event (organizer only)
+  // Create new event (organizer only) - with venue embedded
   createEvent: (eventData: CreateEventPayload) =>
-    api.post<Event>('/organizer/events', eventData),
+    api.post<Event>('/organizer/events/with-venue', eventData),
 
   // Update event (organizer only)
   updateEvent: (eventId: number, eventData: Partial<CreateEventPayload>) =>
