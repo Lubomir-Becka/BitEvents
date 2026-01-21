@@ -1,16 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Loader2 } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
 import { EventCard } from '../components/EventCard';
-import { useEvents } from '../hooks/useEvents';
+import { savedEventsApi, getErrorMessage, type Event } from '../services/api';
 
 export const SavedEvents: React.FC = () => {
   const navigate = useNavigate();
-  const { events = [], isLoading } = useEvents();
+  const [savedEvents, setSavedEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock saved events (v realite by to boli eventy s isSaved: true)
-  const savedEvents = events.slice(0, 6);
+  useEffect(() => {
+    const fetchSaved = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await savedEventsApi.getMySavedEvents();
+        setSavedEvents(response.data || []);
+      } catch (err) {
+        setError(getErrorMessage(err));
+        setSavedEvents([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSaved();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -35,7 +52,13 @@ export const SavedEvents: React.FC = () => {
             </div>
           )}
 
-          {!isLoading && savedEvents.length > 0 && (
+          {!isLoading && error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center text-red-700">
+              Nepodarilo sa načítať uložené eventy: {error}
+            </div>
+          )}
+
+          {!isLoading && !error && savedEvents.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {savedEvents.map((event) => (
                 <EventCard
@@ -47,7 +70,7 @@ export const SavedEvents: React.FC = () => {
             </div>
           )}
 
-          {!isLoading && savedEvents.length === 0 && (
+          {!isLoading && !error && savedEvents.length === 0 && (
             <div className="min-h-[500px] flex flex-col items-center justify-center text-center py-20 px-8 bg-white rounded-lg shadow-sm border border-gray-100">
               <Heart className="w-24 h-24 text-gray-300 mb-6" />
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
