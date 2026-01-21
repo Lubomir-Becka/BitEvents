@@ -86,7 +86,7 @@ export const Home: React.FC = () => {
               />
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-700 transition shrink-0"
+                className="bg-blue-600! text-white! px-8 py-3 rounded-full font-semibold hover:bg-blue-700! transition shrink-0"
               >
                 Hľadať
               </button>
@@ -107,7 +107,7 @@ export const Home: React.FC = () => {
               return (
                 <button
                   key={category.value}
-                  onClick={() => navigate(`/events?category=${category.value}`)}
+                  onClick={() => navigate(`/events?search=${encodeURIComponent(category.label)}`)}
                   className="flex flex-col items-center justify-center p-8 rounded-xl bg-white border-2 border-gray-100 hover:border-blue-500 hover:shadow-lg transition-all group"
                 >
                   <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors">

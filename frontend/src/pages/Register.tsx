@@ -62,7 +62,9 @@ export const Register: React.FC = () => {
         isOrganizer: data.isOrganizer,
       });
       const { token, user } = response.data;
-      login(user, token);
+      // Some backends ignore the flag; enforce it locally so the UI matches the choice.
+      const userWithRole = { ...user, isOrganizer: !!data.isOrganizer };
+      login(userWithRole, token);
       navigate('/');
     } catch (err) {
       setApiError(getErrorMessage(err));
@@ -275,7 +277,7 @@ export const Register: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN - EMPTY GRADIENT */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-800 to-gray-900"></div>
+      <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-gray-800 to-gray-900"></div>
     </div>
   );
 };

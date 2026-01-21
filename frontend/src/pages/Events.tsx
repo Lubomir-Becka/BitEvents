@@ -16,7 +16,8 @@ export const Events: React.FC = () => {
     kosice: true,
     online: false,
   });
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   const { events = [], isLoading, error, total, searchEvents, filterByLocations, loadMore } = useEvents();
 
@@ -51,10 +52,24 @@ export const Events: React.FC = () => {
       kosice: true,
       online: false,
     });
+    setSelectedCategories([]);
+    setDateFilter('');
     setSearchQuery('');
     // Reset všetkých filtrov a načítaj znova eventy
     filterByLocations(['bratislava', 'kosice']);
     searchEvents('');
+  };
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const handleDateChange = (date: string) => {
+    setDateFilter(date);
   };
 
   const handleEventClick = (event: ApiEvent) => {
@@ -105,6 +120,10 @@ export const Events: React.FC = () => {
             <Sidebar
               selectedLocations={selectedLocations}
               onToggleLocation={toggleLocation}
+              selectedCategories={selectedCategories}
+              onToggleCategory={toggleCategory}
+              dateFilter={dateFilter}
+              onDateChange={handleDateChange}
               onReset={resetFilters}
             />
           </aside>
@@ -164,32 +183,6 @@ export const Events: React.FC = () => {
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">{total || 0} výsledkov</p>
               </div>
-              <div className="flex gap-2 bg-white rounded-lg shadow-sm p-1 border border-gray-200">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`px-4 py-2 rounded font-semibold text-sm transition-all ${
-                    viewMode === 'grid' 
-                      ? 'bg-blue-600 text-white shadow-sm' 
-                      : 'bg-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                  aria-label="Grid view"
-                  title="Mriežkový pohľad"
-                >
-                  ⊞ Mriežka
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={`px-4 py-2 rounded font-semibold text-sm transition-all ${
-                    viewMode === 'list' 
-                      ? 'bg-blue-600 text-white shadow-sm' 
-                      : 'bg-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                  aria-label="List view"
-                  title="Zoznam"
-                >
-                  ☰ Zoznam
-                </button>
-              </div>
             </div>
 
             {/* Error state */}
@@ -208,31 +201,17 @@ export const Events: React.FC = () => {
               </div>
             )}
 
-            {/* Events Grid/List */}
+            {/* Events Grid */}
             {events && events.length > 0 && (
-              <>
-                {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {events.map((event) => (
-                      <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        onClick={handleEventClick}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col gap-4">
-                    {events.map((event) => (
-                      <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        onClick={handleEventClick}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {events.map((event) => (
+                  <EventCard 
+                    key={event.id} 
+                    event={event} 
+                    onClick={handleEventClick}
+                  />
+                ))}
+              </div>
             )}
 
             {/* Empty state */}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Clock, Tag, User, ChevronRight, Loader2, Heart } from 'lucide-react';
 import { Navigation } from '../components/Navigation';
-import { eventsApi, registrationApi, type Event, getErrorMessage } from '../services/api';
+import { eventsApi, registrationApi, savedEventsApi, type Event, getErrorMessage } from '../services/api';
 import { useAuth } from '../context/useAuth';
 
 export const EventDetail: React.FC = () => {
@@ -37,8 +37,18 @@ export const EventDetail: React.FC = () => {
             console.error('Failed to check registration status:', err);
             setIsRegistered(false);
           }
+
+          // Check if event is saved
+          try {
+            const savedStatus = await savedEventsApi.isSaved(Number(id));
+            setIsSaved(savedStatus.data.isSaved);
+          } catch (err) {
+            console.error('Failed to check saved status:', err);
+            setIsSaved(false);
+          }
         } else {
           setIsRegistered(false);
+          setIsSaved(false);
         }
       } catch (err) {
         setError(getErrorMessage(err));
@@ -65,6 +75,22 @@ export const EventDetail: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const getMapEmbedUrl = () => {
+    if (!event) return '';
+    
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+    
+    if (event.venue.latitude && event.venue.longitude) {
+      return `https://www.google.com/maps/embed/v1/view?key=${apiKey}&center=${event.venue.latitude},${event.venue.longitude}&zoom=15`;
+    }
+    
+    const locationQuery = event.venue.address
+      ? `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`
+      : `${event.venue.name}, ${event.venue.city}`;
+    
+    return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(locationQuery)}&zoom=15`;
   };
 
   const handleRegister = async () => {
@@ -117,9 +143,9 @@ export const EventDetail: React.FC = () => {
     setIsSaving(true);
     try {
       if (isSaved) {
-        await eventsApi.unsaveEvent(Number(id));
+        await savedEventsApi.unsaveEvent(Number(id));
       } else {
-        await eventsApi.saveEvent(Number(id));
+        await savedEventsApi.saveEvent(Number(id));
       }
       setIsSaved(!isSaved);
     } catch (err) {
@@ -386,11 +412,7 @@ export const EventDetail: React.FC = () => {
                       width="100%"
                       height="100%"
                       style={{ border: 0 }}
-                      src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=${encodeURIComponent(
-                        event.venue.address
-                          ? `${event.venue.name}, ${event.venue.address}, ${event.venue.city}`
-                          : `${event.venue.name}, ${event.venue.city}`
-                      )}&zoom=15`}
+                      src={getMapEmbedUrl()}
                       allowFullScreen
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
