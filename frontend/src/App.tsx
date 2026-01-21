@@ -11,6 +11,8 @@ const Events = lazy(() => import('./pages/Events').then(module => ({ default: mo
 const EventDetail = lazy(() => import('./pages/EventDetail').then(module => ({ default: module.EventDetail })));
 const UserProfile = lazy(() => import('./pages/UserProfile').then(module => ({ default: module.UserProfile })));
 const SavedEvents = lazy(() => import('./pages/SavedEvents').then(module => ({ default: module.SavedEvents })));
+const OrganizerDashboard = lazy(() => import('./pages/organizer/Dashboard').then(module => ({ default: module.OrganizerDashboard })));
+const OrganizerEvents = lazy(() => import('./pages/organizer/Events').then(module => ({ default: module.OrganizerEvents })));
 
 // Loading komponent pre Suspense
 const LoadingFallback = () => (
@@ -78,6 +80,22 @@ const AppRoutes: React.FC = () => {
           element={
             <ProtectedRoute>
               <SavedEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organizer/dashboard"
+          element={
+            <ProtectedRoute>
+              <OrganizerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/organizer/events"
+          element={
+            <ProtectedRoute>
+              <OrganizerEvents />
             </ProtectedRoute>
           }
         />

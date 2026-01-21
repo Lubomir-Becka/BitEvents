@@ -124,6 +124,8 @@ export interface Event {
     name: string;
     city: string;
     address: string;
+    latitude?: number;
+    longitude?: number;
     googleMapsUrl?: string;
   };
   organizer: {
@@ -133,6 +135,26 @@ export interface Event {
     isOrganizer: boolean;
   };
   creationDateTime: string;
+}
+
+export interface CreateEventPayload {
+  name: string;
+  description: string;
+  startDateTime: string;
+  endDateTime: string;
+  type: string;
+  imageUrl?: string;
+  capacity: number;
+  price: number;
+  status: string;
+  venue: {
+    name: string;
+    city: string;
+    address: string;
+    latitude?: number;
+    longitude?: number;
+    googleMapsUrl?: string;
+  };
 }
 
 export interface EventsResponse {
@@ -191,46 +213,187 @@ export const eventsApi = {
   getById: (id: number) =>
     api.get<Event>(`/events/${id}`),
 
-  create: (eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'organizerId'>) =>
+  create: (eventData: CreateEventPayload) =>
     api.post<Event>('/events', eventData),
 
-  update: (id: number, eventData: Partial<Event>) =>
+  update: (id: number, eventData: Partial<CreateEventPayload>) =>
     api.put<Event>(`/events/${id}`, eventData),
 
   delete: (id: number) =>
     api.delete(`/events/${id}`),
+};
 
+export const savedEventsApi = {
+  // Check if event is saved by user
   isSaved: (eventId: number) =>
-    api.get<{ isSaved: boolean }>(`/events/${eventId}/saved`),
+    api.get<{ isSaved: boolean }>(`/saved-events/check/${eventId}`),
 
+  // Save event to favorites
   saveEvent: (eventId: number) =>
-    api.post(`/events/${eventId}/save`),
+    api.post(`/saved-events/${eventId}`),
 
+  // Remove event from favorites
   unsaveEvent: (eventId: number) =>
-    api.delete(`/events/${eventId}/save`),
+    api.delete(`/saved-events/${eventId}`),
+
+  // Get all saved events for current user
+  getMySavedEvents: () =>
+    api.get<Event[]>('/saved-events'),
 };
 
 export const registrationApi = {
+  // Register for an event
   register: (eventId: number) =>
     api.post(`/registrations/events/${eventId}`),
 
+  // Unregister from an event
   unregister: (eventId: number) =>
     api.delete(`/registrations/events/${eventId}`),
 
+  // Get my registrations
   getMyRegistrations: () =>
     api.get<EventRegistration[]>('/registrations/events/my'),
 
-  
+  // Check if user is registered for an event
   isRegistered: (eventId: number) =>
     api.get<{ isRegistered: boolean }>(`/registrations/check/${eventId}`),
 };
 
 export const userApi = {
-  updateProfile: (data: UpdateProfileDto) =>
-    api.put<UserResponseDto>('/auth/me', data),
+  // Get current user profile
+  getCurrentUser: () =>
+    api.get<UserResponseDto>('/users/me'),
 
+  // Update profile
+  updateProfile: (data: UpdateProfileDto) =>
+    api.put<UserResponseDto>('/users/me', data),
+
+  // Change password
   changePassword: (data: ChangePasswordDto) =>
-    api.put<void>('/auth/me/password', data),
+    api.put<void>('/users/me/password', data),
+
+  // Upload profile picture
+  uploadProfilePicture: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<{ profilePictureUrl: string }>('/users/me/profile-picture', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  deleteAccount: () =>
+    api.delete<void>('/users/me'),
+};
+
+export const fileApi = {
+  uploadProfileImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<{
+      fileName: string;
+      fileDownloadUri: string;
+      fileType: string;
+      size: string;
+    }>('/files/upload/profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  uploadEventImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<{
+      fileName: string;
+      fileDownloadUri: string;
+      fileType: string;
+      size: string;
+    }>('/files/upload/event', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
+export interface EventImage {
+  id: number;
+  eventId: number;
+  imageUrl: string;
+  isPrimary: boolean;
+  displayOrder?: number;
+}
+
+export const eventImageApi = {
+  // Upload image for event
+  uploadImage: (eventId: number, file: File, isPrimary: boolean = false, displayOrder?: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (isPrimary !== undefined) formData.append('isPrimary', String(isPrimary));
+    if (displayOrder !== undefined) formData.append('displayOrder', String(displayOrder));
+
+    return api.post<EventImage>(`/events/${eventId}/images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // Get all images for event
+  getEventImages: (eventId: number) =>
+    api.get<EventImage[]>(`/events/${eventId}/images`),
+
+  // Set image as primary
+  setPrimaryImage: (eventId: number, imageId: number) =>
+    api.put<void>(`/events/${eventId}/images/${imageId}/set-primary`),
+
+  // Delete image
+  deleteImage: (eventId: number, imageId: number) =>
+    api.delete(`/events/${eventId}/images/${imageId}`),
+};
+
+export interface OrganizerDashboard {
+  totalEvents: number;
+  totalRegistrations: number;
+  events: Event[];
+}
+
+export interface EventStatistics {
+  eventId: number;
+  eventName: string;
+  totalRegistrations: number;
+  capacity: number | null;
+  availableSpots: number | null;
+  registrations: EventRegistration[];
+}
+
+export const organizerApi = {
+  // Get organizer dashboard
+  getDashboard: () =>
+    api.get<OrganizerDashboard>('/organizer/dashboard'),
+
+  // Get all events by current organizer
+  getMyEvents: () =>
+    api.get<Event[]>('/organizer/events'),
+
+  // Get event statistics
+  getEventStatistics: (eventId: number) =>
+    api.get<EventStatistics>(`/organizer/events/${eventId}/statistics`),
+
+  // Create new event (organizer only)
+  createEvent: (eventData: CreateEventPayload) =>
+    api.post<Event>('/organizer/events', eventData),
+
+  // Update event (organizer only)
+  updateEvent: (eventId: number, eventData: Partial<CreateEventPayload>) =>
+    api.put<Event>(`/organizer/events/${eventId}`, eventData),
+
+  // Delete event (organizer only)
+  deleteEvent: (eventId: number) =>
+    api.delete(`/organizer/events/${eventId}`),
 };
 
 export default api;
