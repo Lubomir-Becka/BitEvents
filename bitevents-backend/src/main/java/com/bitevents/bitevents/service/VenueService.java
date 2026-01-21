@@ -28,8 +28,8 @@ public class VenueService {
         venue.setName(dto.getName());
         venue.setAddress(dto.getAddress());
         venue.setCity(dto.getCity());
-        venue.setLatitude(BigDecimal.valueOf(dto.getLatitude()));
-        venue.setLongitude(BigDecimal.valueOf(dto.getLongitude()));
+        venue.setLatitude(dto.getLatitude());
+        venue.setLongitude(dto.getLongitude());
         venue.setGoogleMapsUrl(dto.getGoogleMapsUrl());
 
         return venueRepository.save(venue);
@@ -54,8 +54,8 @@ public class VenueService {
         existingVenue.setName(dto.getName());
         existingVenue.setAddress(dto.getAddress());
         existingVenue.setCity(dto.getCity());
-        existingVenue.setLatitude(BigDecimal.valueOf(dto.getLatitude()));
-        existingVenue.setLongitude(BigDecimal.valueOf(dto.getLongitude()));
+        existingVenue.setLatitude(dto.getLatitude());
+        existingVenue.setLongitude(dto.getLongitude());
         existingVenue.setGoogleMapsUrl(dto.getGoogleMapsUrl());
 
         return venueRepository.save(existingVenue);
